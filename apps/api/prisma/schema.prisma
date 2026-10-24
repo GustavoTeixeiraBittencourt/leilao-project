@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  auctioneer
+  bidder
+}
+
+enum WalletEntryKind {
+  deposit
+  settlement_debit
+  settlement_credit
+  refund
+}
+
+enum LotStatus {
+  open
+  closed
+  cancelled
+}
+
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  role         UserRole
+  displayName  String   @map("display_name")
+  publicAlias  String   @unique @map("public_alias")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  lotsAsAuctioneer Lot[]         @relation("AuctioneerLots")
+  lotsAsLeader     Lot[]         @relation("LeaderLots")
+  lotsAsWinner     Lot[]         @relation("WinnerLots")
+  bids             Bid[]
+  walletEntries    WalletEntry[]
+  receipts         Receipt[]
+
+  @@map("users")
+}
+
+model Lot {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  auctioneerId      String    @map("auctioneer_id") @db.Uuid
+  externalSource    String    @default("artic") @map("external_source")
+  externalId        String    @map("external_id")
+  title             String
+  imageUrl          String?   @map("image_url")
+  // Snapshot imutável do item no momento da criação do lote: artist_display,
+  // date_display, medium_display, dimensions, credit_line, is_public_domain,
+  // main_reference_number. A API externa nunca é consultada de novo depois disso.
+  attributes        Json      @default("{}")
+  startingBidCents  BigInt    @map("starting_bid_cents")
+  minIncrementCents BigInt    @map("min_increment_cents")
+  startsAt          DateTime  @map("starts_at") @db.Timestamptz(3)
+  endsAt            DateTime  @map("ends_at") @db.Timestamptz(3)
+  status            LotStatus @default(open)
+  currentBidCents   BigInt?   @map("current_bid_cents")
+  leaderId          String?   @map("leader_id") @db.Uuid
+  bidCount          Int       @default(0) @map("bid_count")
+  winnerId          String?   @map("winner_id") @db.Uuid
+  finalPriceCents   BigInt?   @map("final_price_cents")
+  closedAt          DateTime? @map("closed_at") @db.Timestamptz(3)
+  sealCount         Int?      @map("seal_count")
+  sealHash          String?   @map("seal_hash")
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  auctioneer    User          @relation("AuctioneerLots", fields: [auctioneerId], references: [id])
+  leader        User?         @relation("LeaderLots", fields: [leaderId], references: [id])
+  winner        User?         @relation("WinnerLots", fields: [winnerId], references: [id])
+  bids          Bid[]
+  walletEntries WalletEntry[]
+  receipt       Receipt?
+
+  @@index([status])
+  @@index([startsAt])
+  @@index([auctioneerId])
+  @@map("lots")
+}
+
+model Bid {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lotId       String   @map("lot_id") @db.Uuid
+  bidderId    String   @map("bidder_id") @db.Uuid
+  amountCents BigInt   @map("amount_cents")
+  placedAt    DateTime @default(now()) @map("placed_at") @db.Timestamptz(3)
+  seq         Int
+  // Cadeia de hash à prova de adulteração: hash = HMAC_SHA256(AUDIT_SECRET,
+  // prevHash || lotId|seq|alias|amount|placedAt). Ver src/lib/hash-chain.ts.
+  prevHash    String   @map("prev_hash")
+  hash        String
+
+  lot    Lot  @relation(fields: [lotId], references: [id])
+  bidder User @relation(fields: [bidderId], references: [id])
+
+  @@unique([lotId, seq])
+  @@index([lotId])
+  @@index([bidderId])
+  @@map("bids")
+}
+
+model WalletEntry {
+  id          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String          @map("user_id") @db.Uuid
+  kind        WalletEntryKind
+  // Assinado: deposit/settlement_credit/refund positivos, settlement_debit negativo.
+  amountCents BigInt          @map("amount_cents")
+  lotId       String?         @map("lot_id") @db.Uuid
+  createdAt   DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id])
+  lot  Lot? @relation(fields: [lotId], references: [id])
+
+  @@index([userId])
+  @@map("wallet_entries")
+}
+
+model Receipt {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lotId       String   @unique @map("lot_id") @db.Uuid
+  winnerId    String   @map("winner_id") @db.Uuid
+  amountCents BigInt   @map("amount_cents")
+  publicToken String   @unique @map("public_token")
+  sealCount   Int      @map("seal_count")
+  sealHash    String   @map("seal_hash")
+  issuedAt    DateTime @default(now()) @map("issued_at") @db.Timestamptz(3)
+
+  lot    Lot  @relation(fields: [lotId], references: [id])
+  winner User @relation(fields: [winnerId], references: [id])
+
+  @@index([publicToken])
+  @@map("receipts")
+}
