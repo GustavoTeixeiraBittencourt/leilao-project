@@ -1,0 +1,41 @@
+# Uso de IA neste projeto
+
+Registro por etapa do que foi gerado com apoio de IA (Claude Code) e o que precisa de revisão
+humana antes de ser levado como verdade absoluta. O usuário usa este arquivo como base para
+preencher o campo "como usei IA" do processo seletivo.
+
+## Etapa 1 — esqueleto api+web, auth, health check
+
+**Gerado com IA:**
+- Validação dos endpoints da API externa (Art Institute of Chicago) com `curl`/`WebFetch` antes
+  de desenhar qualquer schema — descobriu que a API está atrás de um Cloudflare Managed
+  Challenge que bloqueia clientes não-navegador (403, `cf-mitigated: challenge`), o que mudou
+  duas decisões: imagens nunca são proxeadas pelo backend, e o seed usa o dump oficial aberto do
+  museu no GitHub em vez da API ao vivo. Achado documentado em `CLAUDE.md` seção 6 e
+  `DECISIONS.md`.
+- Estrutura completa do monorepo (`apps/api`, `apps/web`, pnpm workspaces).
+- `schema.prisma` completo (models, enums, relações, índices) e a migration customizada
+  (CHECK constraints, índices parciais, triggers de append-only e de bloqueio de lance de
+  leiloeiro) — testada manualmente contra o Postgres local (inserção direta via SQL confirmando
+  que o trigger `forbid_auctioneer_bid` rejeita o caso).
+- Backend Fastify: config de env com Zod, plugin de JWT/autorização por papel, tratamento de
+  erro padronizado `{ code, message }`, módulo de auth (signup/login/me) com bcrypt e geração de
+  alias pseudônimo.
+- Frontend Vite/React: cliente HTTP, contexto de auth, páginas de login/signup e home com
+  status da API em tempo real via TanStack Query.
+- Arquivos de deploy (`render.yaml`, `apps/web/vercel.json`) e README com passo a passo de setup.
+
+**O que precisa de revisão humana:**
+- **Segurança dos segredos**: `JWT_SECRET`/`AUDIT_SECRET` locais foram gerados com
+  `openssl rand -hex 32` e ficam só em `apps/api/.env` (não commitado) — confirmar que o Render
+  gera valores próprios em produção (configurado via `generateValue: true` no `render.yaml`) e
+  que eles nunca aparecem em logs.
+- **Decisão de bcryptjs em vez de argon2/bcrypt nativo**: escolhida para evitar risco de
+  compilação nativa no deploy sob prazo curto — validar se isso é aceitável ou se vale trocar
+  por `@node-rs/argon2` depois que o deploy já estiver estável.
+- **Armazenamento do JWT no frontend**: `localStorage` (Bearer token), não cookie httpOnly —
+  trade-off deliberado por causa do deploy cross-origin (Vercel + Render), documentado como
+  aceitável para uma simulação sem dinheiro real, mas revisar se faz sentido para o relato final.
+- Revisar pessoalmente o módulo de auth (`apps/api/src/modules/auth/`) e a migration customizada
+  (`apps/api/prisma/migrations/*/migration.sql`) linha a linha antes de explicar em entrevista —
+  são os trechos mais "não óbvios" desta etapa.
