@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: leilao
+      POSTGRES_PASSWORD: leilao
+      POSTGRES_DB: leilao
+    ports:
+      - "5433:5432" # 5432 já está em uso pelo Postgres nativo do sistema
+    volumes:
+      - leilao_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leilao"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  leilao_db_data:
