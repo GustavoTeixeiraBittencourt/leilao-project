@@ -45,6 +45,12 @@ export function publishLotEvent(event: LotEvent): void {
   emitter.emit(channel(event.lotId), event);
 }
 
+// Quantos assinantes (conexões SSE) o lote tem agora; usado pelos testes para
+// provar que desconectar libera o assinante.
+export function lotListenerCount(lotId: string): number {
+  return emitter.listenerCount(channel(lotId));
+}
+
 export function subscribeLotEvents(lotId: string, handler: (event: LotEvent) => void): () => void {
   emitter.on(channel(lotId), handler);
   return () => emitter.off(channel(lotId), handler);
