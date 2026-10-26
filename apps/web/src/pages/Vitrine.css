@@ -1,0 +1,107 @@
+/* ---- Herói ---- */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 520px;
+  align-items: end;
+  gap: var(--space-16);
+  padding-block: var(--space-16);
+}
+.hero__text { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-6); }
+.hero__overline { color: var(--color-brand-primary); }
+.hero__ctas { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.hero__art { display: flex; flex-direction: column; gap: var(--space-2); }
+.hero__image { height: 560px; }
+
+/* ---- Seções ---- */
+.vitrine__section { display: flex; flex-direction: column; gap: var(--space-6); padding-block: var(--space-12); }
+.vitrine__band { background: var(--color-bg-subtle); }
+.vitrine__band .lot-image { background: var(--color-bg-page); }
+
+.vitrine__head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+/* Sem isto os filhos flex não encolhem abaixo do conteúdo e a página ganha rolagem horizontal. */
+.vitrine__head > * { min-width: 0; }
+
+/* Abas: o título da seção É a aba (30px serifado), com sublinhado de 3px na ativa. */
+.vitrine__tabs { display: flex; gap: var(--space-6); overflow-x: auto; scrollbar-width: none; }
+.vitrine__tabs::-webkit-scrollbar { display: none; }
+.vitrine__tab {
+  padding: 0;
+  padding-bottom: var(--space-1);
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.vitrine__tab:hover { color: var(--color-text-primary); }
+.vitrine__tab--active { color: var(--color-text-primary); border-bottom-color: var(--color-brand-primary); }
+
+.vitrine__tools { display: flex; gap: var(--space-3); align-items: center; }
+.vitrine__search,
+.vitrine__sort {
+  min-height: 44px;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+.vitrine__search { width: 280px; padding: 0 var(--space-4); }
+.vitrine__search::placeholder { color: var(--color-text-secondary); }
+.vitrine__sort { padding: 0 var(--space-4); cursor: pointer; }
+
+/* ---- Grades ---- */
+/* Ao vivo: destaque grande + 2 compactos, o terceiro deslocado 96px para baixo. */
+.vitrine__live {
+  display: grid;
+  grid-template-columns: minmax(0, 560px) minmax(0, 300px) minmax(0, 300px);
+  justify-content: space-between;
+  gap: var(--layout-gutter);
+  padding-top: var(--space-6);
+}
+.vitrine__offset { padding-top: 96px; }
+
+.vitrine__grid { display: grid; gap: var(--layout-gutter); }
+.vitrine__grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vitrine__grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.vitrine__results-head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
+.vitrine__link { background: none; border: 0; padding: 0; color: var(--color-brand-primary); cursor: pointer; }
+.vitrine__link:hover { text-decoration: underline; }
+
+/* ---- Tablet ---- */
+@media (max-width: 1199px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); padding-block: var(--space-12); }
+  .hero__image { height: 420px; }
+  .vitrine__live { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vitrine__live > :first-child { grid-column: 1 / -1; }
+  .vitrine__offset { padding-top: 0; }
+  .vitrine__grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vitrine__grid--three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 767px) {
+  .hero { padding-block: var(--space-6); gap: var(--space-4); }
+  .hero__title { font-size: 40px; line-height: 46px; }
+  .hero .t-body-l { font-size: 16px; line-height: 24px; }
+  .hero__image { height: 260px; }
+  /* No mobile a imagem vem antes do botão, como no Figma: texto, obra, CTA. */
+  .hero__text { display: contents; }
+  .hero { display: flex; flex-direction: column; align-items: stretch; }
+  .hero__art { order: 2; }
+  .hero__ctas { order: 3; }
+  .hero__ctas > * { width: 100%; }
+  .hero__ctas > :nth-child(2) { display: none; } /* só "Explorar" no mobile */
+
+  .vitrine__section { padding-block: var(--space-6); gap: var(--space-4); }
+  /* nowrap: num flex de várias linhas a largura da linha vem do conteúdo (as abas
+     passavam do contêiner e a página ganhava rolagem horizontal). */
+  .vitrine__head { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+  .vitrine__tabs .t-h2 { font-size: 22px; line-height: 28px; }
+  .vitrine__tools { flex-direction: column; align-items: stretch; }
+  .vitrine__search { width: 100%; }
+  .vitrine__sort { display: none; } /* o Figma mobile só tem a busca */
+  .vitrine__live,
+  .vitrine__grid--three,
+  .vitrine__grid--four { grid-template-columns: minmax(0, 1fr); }
+}

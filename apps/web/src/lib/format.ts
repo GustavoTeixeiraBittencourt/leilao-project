@@ -30,3 +30,25 @@ export function lotCode(id: string): string {
 export function initial(name: string): string {
   return name.trim().charAt(0).toUpperCase() || "?";
 }
+
+// "27/10": só dia e mês.
+export function formatDayMonth(iso: string): string {
+  const date = new Date(iso);
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}`;
+}
+
+// "29/10 às 14:00": quando um lote agendado abre.
+export function formatDayAt(iso: string): string {
+  const date = new Date(iso);
+  return `${formatDayMonth(iso)} às ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+export function bidsLabel(count: number): string {
+  if (count === 0) return "Sem lances";
+  return count === 1 ? "1 lance" : `${count} lances`;
+}
+
+// Primeira linha do artist_display (o museu às vezes acrescenta linhas extras).
+export function firstLine(text: string | null | undefined): string {
+  return (text ?? "").split("\n")[0]?.trim() ?? "";
+}

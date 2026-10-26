@@ -1,0 +1,25 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+  color: inherit;
+}
+.card__image { height: 200px; }
+.card--featured .card__image { height: 420px; }
+
+.card__status { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); width: 100%; }
+.card h3 { width: 100%; overflow-wrap: anywhere; }
+.card:hover h3 { color: var(--color-brand-primary); }
+
+.card__bid { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-2); width: 100%; }
+.card__amount { display: flex; flex-direction: column; }
+
+/* Cartão inteiro é um link: o foco do teclado aparece em volta dele. */
+.card:focus-visible { outline-offset: 6px; }
+
+@media (max-width: 767px) {
+  .card--featured .card__image { height: 300px; }
+  .card--featured h3 { font-size: 30px; line-height: 36px; }
+}

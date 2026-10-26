@@ -1,0 +1,17 @@
+/* O contêiner define a altura (cartão grande 420px, compacto 200px, herói 560px);
+   a imagem preenche sem distorcer. */
+.lot-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.lot-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.lot-image--fallback { color: var(--color-text-secondary); text-align: center; padding: var(--space-4); }

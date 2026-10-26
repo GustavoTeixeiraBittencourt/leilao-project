@@ -32,6 +32,18 @@ export function formatCountdown(ms: number): string {
   return days > 0 ? `${days}d ${clock}` : clock;
 }
 
+// Versão compacta dos cartões: lotes a mais de um dia mostram só "1d 03h"; o resto,
+// o relógio hh:mm:ss (o Figma usa os dois formatos).
+export function formatCountdownShort(ms: number): string {
+  const totalSeconds = Math.floor(Math.max(0, ms) / 1000);
+  const days = Math.floor(totalSeconds / 86_400);
+  if (days > 0) {
+    const hours = Math.floor((totalSeconds % 86_400) / 3_600);
+    return `${days}d ${pad(hours)}h`;
+  }
+  return formatCountdown(ms);
+}
+
 // Só para testes: volta ao estado inicial.
 export function resetServerClock(): void {
   offsetMs = 0;

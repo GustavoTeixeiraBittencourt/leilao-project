@@ -1,8 +1,25 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { ApiError } from "../api/client";
-import { formatCountdown, remainingMs, resetServerClock, serverNowMs, syncServerClock } from "./clock";
+import {
+  formatCountdown,
+  formatCountdownShort,
+  remainingMs,
+  resetServerClock,
+  serverNowMs,
+  syncServerClock,
+} from "./clock";
 import { describeError, messageForCode } from "./errors";
-import { formatDateTime, formatFullDateTime, formatMoney, initial, lotCode } from "./format";
+import {
+  bidsLabel,
+  firstLine,
+  formatDateTime,
+  formatDayAt,
+  formatDayMonth,
+  formatFullDateTime,
+  formatMoney,
+  initial,
+  lotCode,
+} from "./format";
 
 // Normaliza o espaço (o Intl pode usar NBSP) para comparar texto.
 const text = (value: string) => value.replace(/ /g, " ");
@@ -83,6 +100,30 @@ describe("formatCountdown", () => {
   it("rounds down partial seconds and clamps negatives", () => {
     expect(formatCountdown(1_999)).toBe("00:00:01");
     expect(formatCountdown(-500)).toBe("00:00:00");
+  });
+});
+
+describe("card labels", () => {
+  it("uses the compact day+hour countdown beyond one day and the clock otherwise", () => {
+    expect(formatCountdownShort((27 * 3600) * 1000)).toBe("1d 03h");
+    expect(formatCountdownShort((3 * 86_400 + 5 * 3600) * 1000)).toBe("3d 05h");
+    expect(formatCountdownShort(4 * 60_000 + 32_000)).toBe("00:04:32");
+    expect(formatCountdownShort(0)).toBe("00:00:00");
+  });
+
+  it("formats opening dates and bid counts the way the cards show them", () => {
+    const iso = new Date(2026, 9, 29, 14, 0).toISOString();
+    expect(formatDayMonth(iso)).toBe("29/10");
+    expect(formatDayAt(iso)).toBe("29/10 às 14:00");
+    expect(bidsLabel(0)).toBe("Sem lances");
+    expect(bidsLabel(1)).toBe("1 lance");
+    expect(bidsLabel(23)).toBe("23 lances");
+  });
+
+  it("keeps only the first line of the artist text", () => {
+    expect(firstLine("Georges Seurat (French, 1859–1891)\nExtra line")).toBe("Georges Seurat (French, 1859–1891)");
+    expect(firstLine(null)).toBe("");
+    expect(firstLine(undefined)).toBe("");
   });
 });
 
