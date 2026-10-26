@@ -31,7 +31,10 @@ describe("signup alias collisions", () => {
 
   it("retries with a new alias instead of failing with a 500", async () => {
     const existing = await createUser("bidder");
-    aliases.queue.push(existing.publicAlias, "Licitante #zzzz");
+    // Alias livre ÚNICO por execução: usuários não são apagados entre execuções
+    // (ledger append-only), então um alias fixo colidiria a partir da segunda vez.
+    const freeAlias = `Licitante #t${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    aliases.queue.push(existing.publicAlias, freeAlias);
 
     const response = await app.inject({
       method: "POST",
@@ -45,6 +48,6 @@ describe("signup alias collisions", () => {
     });
 
     expect(response.statusCode).toBe(201);
-    expect(response.json().user.publicAlias).toBe("Licitante #zzzz");
+    expect(response.json().user.publicAlias).toBe(freeAlias);
   });
 });
