@@ -47,6 +47,8 @@ type LotOptions = {
   endsInMs?: number;
   startingBidCents?: number;
   minIncrementCents?: number;
+  title?: string;
+  attributes?: Prisma.InputJsonObject;
 };
 
 // Cria o lote direto no banco (sem passar pela API) para os testes poderem
@@ -57,7 +59,8 @@ export async function createLotRow(options: LotOptions) {
     data: {
       auctioneerId: options.auctioneerId,
       externalId: randomUUID(),
-      title: "Test lot",
+      title: options.title ?? "Test lot",
+      attributes: options.attributes ?? {},
       startingBidCents: BigInt(options.startingBidCents ?? 10_000),
       minIncrementCents: BigInt(options.minIncrementCents ?? 1_000),
       startsAt: new Date(now + (options.startsInMs ?? -60_000)),

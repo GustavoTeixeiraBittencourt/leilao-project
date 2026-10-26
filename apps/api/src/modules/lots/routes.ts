@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { lotDto } from "./dto.js";
-import { createLotSchema, lotParamsSchema } from "./schemas.js";
-import { createLot, getLot } from "./service.js";
+import { createLotSchema, listLotsQuerySchema, lotParamsSchema } from "./schemas.js";
+import { createLot, getLot, listLots } from "./service.js";
 
 export async function lotRoutes(app: FastifyInstance) {
   app.post(
@@ -13,6 +13,15 @@ export async function lotRoutes(app: FastifyInstance) {
       return reply.status(201).send({ lot: lotDto(lot, new Date()) });
     },
   );
+
+  // Vitrine: pública. Sem `phase` devolve só as contagens por fase (as abas do
+  // mobile mostram "Ao vivo · 6"); com `phase`, os lotes daquela fase.
+  app.get("/lots", async (request) => {
+    const query = listLotsQuerySchema.parse(request.query);
+    const now = new Date();
+    const { lots, counts } = await listLots(query, now);
+    return { lots: lots.map((lot) => lotDto(lot, now)), counts, serverNow: now.toISOString() };
+  });
 
   // Público (vitrine, sala e auditoria funcionam sem login). Lê só o snapshot
   // guardado no banco: a API externa nunca é consultada aqui.

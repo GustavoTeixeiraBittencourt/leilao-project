@@ -25,3 +25,12 @@ export const createLotSchema = z
 export type CreateLotInput = z.infer<typeof createLotSchema>;
 
 export const lotParamsSchema = z.object({ id: z.string().uuid() });
+
+// Fase é derivada do horário, não existe no banco (ver lotPhase em dto.ts).
+// "cancelled" não é uma opção: lote cancelado nunca aparece na vitrine.
+export const listLotsQuerySchema = z.object({
+  phase: z.enum(["live", "scheduled", "ended"]).optional(),
+  q: z.string().trim().max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+export type ListLotsQuery = z.infer<typeof listLotsQuerySchema>;

@@ -12,7 +12,12 @@ export function lotPhase(lot: Pick<Lot, "status" | "startsAt" | "endsAt">, now: 
   return "live";
 }
 
-type LotWithLeader = Lot & { leader: Pick<User, "publicAlias"> | null };
+// `winner` é opcional: só lotes lidos para exibição o carregam; o lote devolvido
+// por um lance (ainda ao vivo) não tem vencedor.
+type LotWithLeader = Lot & {
+  leader: Pick<User, "publicAlias"> | null;
+  winner?: Pick<User, "publicAlias"> | null;
+};
 
 // BigInt -> number só na borda da API (JSON.stringify não serializa bigint);
 // centavos desta simulação ficam muito abaixo de Number.MAX_SAFE_INTEGER.
@@ -32,6 +37,9 @@ export function lotDto(lot: LotWithLeader, now: Date) {
     currentBidCents: lot.currentBidCents === null ? null : Number(lot.currentBidCents),
     bidCount: lot.bidCount,
     leaderAlias: lot.leader?.publicAlias ?? null,
+    // Resultado (só em lotes encerrados): quem arrematou e por quanto.
+    winnerAlias: lot.winner?.publicAlias ?? null,
+    finalPriceCents: lot.finalPriceCents === null ? null : Number(lot.finalPriceCents),
     serverNow: now.toISOString(),
   };
 }

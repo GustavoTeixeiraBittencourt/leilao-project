@@ -99,6 +99,20 @@ export async function readLotChain(tx: DbClient, lotId: string): Promise<ChainRo
   return z.array(chainRow).parse(rows);
 }
 
+const idRow = z.object({ id: z.string().uuid() });
+
+// Busca da vitrine por título ou artista (o artista vive no snapshot jsonb).
+// Por que SQL cru: o filtro JSON do Prisma não tem modo insensitive e o
+// `contains` dele NÃO escapa % e _ (digitar "%" casaria tudo). Com
+// position(lower(q) in lower(coluna)) não existe curinga nem diferença de caixa.
+export async function searchLotIds(tx: DbClient, q: string): Promise<string[]> {
+  const rows = await tx.$queryRaw`
+    SELECT id FROM lots
+    WHERE position(lower(${q}) in lower(title)) > 0
+       OR position(lower(${q}) in lower(coalesce(attributes->>'artist_display', ''))) > 0`;
+  return z.array(idRow).parse(rows).map((row) => row.id);
+}
+
 const clockRow = z.object({ now: z.date() });
 
 // Relógio do banco, lido DEPOIS dos locks. Não usar now(): ele devolve o
