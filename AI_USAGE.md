@@ -74,3 +74,28 @@ de lances, incluindo concorrência).
 - Anti-sniping: `ends_at = max(ends_at, agora + 2min)`; nunca encurta.
 - Rodar a suíte e fazer a mutação do `lockBidder` pessoalmente para ver o teste falhar.
 - Os testes não limpam o banco (ledger append-only); conferir se a estratégia serve.
+
+---
+
+## Etapa 3: liquidação, worker, auditoria, comprovante e seed (2026-10-26)
+
+**O que a IA gerou**: `modules/settlement` (liquidação idempotente), `worker/closer.ts`, fechamento
+preguiçoso nas leituras, `modules/audit` (`verify.ts` puro + serviço + rota pública),
+`modules/receipts` e `modules/me`, `prisma/seed.ts` + `seed-artworks.json` (10 registros reais do
+dump aberto do museu), a correção do `signup` (retry de alias) e os testes `settlement`, `audit`,
+`receipts` e `signup-alias` (78 testes no total).
+
+**O que precisa de revisão humana** (explicar em entrevista):
+- `modules/settlement/service.ts`: por que liquidar sob o lock do lote, as 3 camadas de
+  idempotência, o selo (e por que lote vazio usa o genesis) e a ordem lote -> licitante.
+- `modules/audit/verify.ts`: o que a cadeia garante sozinha e o que só o selo e o comprovante
+  garantem. Entender o limite do lote aberto (teste `KNOWN LIMIT`) e saber dizê-lo com honestidade.
+- Rodar os ataques de `test/audit.test.ts` e a mutação da checagem de `HASH_MISMATCH` para ver o
+  teste falhar.
+- **Meu erro**: afirmei que o lock do vencedor na liquidação era necessário contra overcommit; a
+  mutação mostrou que o FK já serializa. Está corrigido em `DECISIONS.md` e nos comentários. Vale
+  conferir se concorda com manter o lock explícito.
+- Os testes de adulteração usam `SET LOCAL session_replication_role = replica` (exige superusuário;
+  funciona no Postgres do docker-compose). Em um banco gerenciado sem esse privilégio, esses testes
+  precisariam de outra estratégia.
+- Seed: roda `TRUNCATE`. Conferir o guard de produção antes de qualquer deploy.

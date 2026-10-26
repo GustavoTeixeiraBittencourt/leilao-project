@@ -186,3 +186,63 @@ incomodar, a alternativa é um banco `leilao_test` separado.
 **Validação por mutação**: removendo o `lockBidder` de propósito, o teste de lances simultâneos em
 5 lotes com saldo para 1 passa a aceitar os 5 (comprometimento acima do saldo). Ou seja, o teste
 de concorrência de fato protege essa regra.
+
+---
+
+## 2026-10-26 — Etapa 3: liquidação, worker, auditoria, comprovante e seed
+
+**Decisões**:
+- **Sem migration nova**: `receipts`, o selo em `lots` e o índice parcial de idempotência já
+  existiam. Nenhum risco de drift do Prisma nesta etapa.
+- **Liquidação em 3 camadas de idempotência**: (1) sob o lock do lote só liquida se ainda está `open`
+  e vencido; (2) ledger com `ON CONFLICT DO NOTHING` no índice `(lot_id, kind, user_id)`
+  (`createMany({ skipDuplicates })`); (3) `UNIQUE(lot_id)` no comprovante.
+- **Selo de lote sem lances = hash genesis** (`seal_count = 0`): um lance injetado depois num lote
+  vazio quebra a conferência.
+- **Worker** (`src/worker/closer.ts`): `setTimeout` encadeado (ticks não se sobrepõem), primeiro tick
+  imediato (cobre plano que dorme), cada lote em transação própria, `FOR UPDATE SKIP LOCKED`. Sobe em
+  `server.ts`, não em `buildApp()`, para os testes controlarem a liquidação. `WORKER_INTERVAL_MS`
+  (padrão 1500).
+- **Fechamento preguiçoso** só nas leituras de UM lote (`GET /lots/:id`, `/lots/:id/bids`, auditoria),
+  nunca na listagem: uma leitura em massa não deve disparar várias liquidações.
+- **Auditoria**: leitura de lote + comprovante + cadeia em transação `REPEATABLE READ` (mesmo
+  snapshot), senão um lance no meio vira falso "adulterado". Retorna no primeiro ponto de quebra, com
+  `seq` e motivo (`SEQ_GAP`, `PREV_HASH_MISMATCH`, `HASH_MISMATCH`, `BID_COUNT_MISMATCH`,
+  `LOT_SUMMARY_MISMATCH`, `SEAL_MISMATCH`, `RECEIPT_MISMATCH`).
+- **Total recebido do leiloeiro** = soma dos `settlement_credit` do ledger.
+- **Seed**: 10 obras reais do dump aberto do museu salvas em `prisma/seed-artworks.json` (sem rede).
+  Lotes encerrados passam pelo código real (`placeBid` -> `settleLot`), então a auditoria dá íntegro;
+  o seed audita tudo no final e falha se algo não fechar. Reseta o banco com `TRUNCATE`; em produção
+  só com `ALLOW_SEED_RESET=1`. Exceção consciente à regra "SQL cru só em `locks.ts`": o `TRUNCATE` do
+  seed, que é script de desenvolvimento e não código de runtime.
+- **`pnpm lint` agora checa `prisma/seed.ts` e `test/`** (`tsconfig.check.json`); antes só `src/`.
+
+**Correção de uma afirmação minha (importante)**: eu disse que, sem `lockBidder` na liquidação,
+um vencedor poderia se comprometer acima do saldo. Testei removendo o lock e o teste de espera
+continuou passando: o FK do débito em `wallet_entries` já toma `FOR KEY SHARE` na linha do usuário,
+que conflita com o `FOR UPDATE` do lance, e isso serializa do mesmo jeito. Mantive o lock explícito
+(a regra de ordem lote -> licitante fica visível e não depende de efeito colateral de FK), mas o
+teste `waits for the winner's row lock` **não prova que o lock explícito existe**; ele guarda o
+comportamento. O teste de estresse com lances simultâneos é best effort (janela de submilissegundos).
+Isto é diferente do lock do licitante no LANCE, que a mutação comprovou ser necessário (Etapa 2).
+
+**Bug real achado e corrigido (fora do escopo, por causa de um flake)**: `public_alias` tem só 4 hex
+(65.536 valores) e é `UNIQUE`; uma colisão no `signup` devolvia 500. Reproduzido com um teste
+determinístico (gerador mockado) e corrigido com retry (até 5 tentativas); colisão de e-mail em
+corrida agora vira `EMAIL_ALREADY_IN_USE`. Com muitos usuários o espaço de 4 hex continua pequeno:
+se o projeto crescer, aumentar o sufixo.
+
+**Limites conhecidos (vão para o README)**:
+- Lote **aberto**: remover o último lance E reescrever `bid_count`/lance atual/líder não é
+  detectável sem âncora externa. Existe um teste que documenta isso (`KNOWN LIMIT`). Lote
+  **encerrado** é protegido pelo selo e pelo comprovante.
+- O hash inclui o `public_alias` (tabela `users`), então editar o alias de um usuário também aparece
+  como `HASH_MISMATCH`.
+- Se `bid_count` divergir da cadeia no fechamento, `settleLocked` lança erro e o lote não é
+  liquidado; o worker tentará de novo a cada tick (ruído de log, nunca liquidação sobre dado
+  inconsistente).
+- `closeIfDue` compara com o relógio da aplicação; a liquidação em si decide pelo relógio do banco
+  (no pior caso a leitura chama `settleLot` que vira no-op).
+
+**Dev**: o banco de dev acumula dados dos testes (ledger append-only). Rodar `pnpm prisma:seed`
+limpa tudo.
