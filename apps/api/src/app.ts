@@ -1,6 +1,7 @@
 import cors from "@fastify/cors";
 import Fastify from "fastify";
 import { env } from "./config/env.js";
+import { auditRoutes } from "./modules/audit/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { bidRoutes } from "./modules/bids/routes.js";
 import { lotRoutes } from "./modules/lots/routes.js";
@@ -26,6 +27,7 @@ export async function buildApp() {
   await app.register(walletRoutes);
   await app.register(lotRoutes);
   await app.register(bidRoutes);
+  await app.register(auditRoutes);
 
   return app;
 }

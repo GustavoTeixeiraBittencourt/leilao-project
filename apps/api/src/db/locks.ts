@@ -73,6 +73,32 @@ export async function lockBidder(tx: DbClient, userId: string): Promise<LockedBi
   return z.array(lockedBidderRow).parse(rows)[0] ?? null;
 }
 
+const chainRow = z.object({
+  seq: z.number().int(),
+  bidder_id: z.string().uuid(),
+  alias: z.string(),
+  amount_cents: z.bigint(),
+  placed_at: z.date(),
+  prev_hash: z.string(),
+  hash: z.string(),
+});
+export type ChainRow = z.infer<typeof chainRow>;
+
+// Leitura da cadeia para a auditoria: UMA instrução com o alias já resolvido,
+// em ordem de seq. Sem lock: é leitura pura. Quem chama a usa dentro de uma
+// transação REPEATABLE READ junto com a leitura do lote, para os dois verem o
+// mesmo snapshot (senão um lance no meio viraria falso "adulterado").
+export async function readLotChain(tx: DbClient, lotId: string): Promise<ChainRow[]> {
+  const rows = await tx.$queryRaw`
+    SELECT b.seq, b.bidder_id, u.public_alias AS alias, b.amount_cents,
+           b.placed_at, b.prev_hash, b.hash
+    FROM bids b
+    JOIN users u ON u.id = b.bidder_id
+    WHERE b.lot_id = ${lotId}::uuid
+    ORDER BY b.seq ASC`;
+  return z.array(chainRow).parse(rows);
+}
+
 const clockRow = z.object({ now: z.date() });
 
 // Relógio do banco, lido DEPOIS dos locks. Não usar now(): ele devolve o
