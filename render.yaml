@@ -7,7 +7,7 @@ services:
     # NODE_ENV=production vale também no build do Render, e nesse modo o pnpm
     # PULA as devDependencies. `tsc` (build) e `prisma` (migrate deploy no start)
     # são devDependencies, então o install precisa de --prod=false.
-    buildCommand: "npm install -g pnpm && pnpm install --frozen-lockfile --prod=false && pnpm --filter @leilao/api build"
+    buildCommand: "npm install -g pnpm@12 && pnpm install --frozen-lockfile --prod=false && pnpm --filter @leilao/api build"
     # Roda `prisma migrate deploy` (nunca `migrate dev`) e sobe o servidor, que
     # também inicia o worker de encerramento (fecha lotes vencidos ao acordar).
     startCommand: "pnpm --filter @leilao/api start"

@@ -13,13 +13,5 @@
     "lint": "pnpm -r lint",
     "db:up": "docker compose up -d db",
     "db:down": "docker compose down"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@prisma/client",
-      "@prisma/engines",
-      "esbuild",
-      "prisma"
-    ]
   }
 }
