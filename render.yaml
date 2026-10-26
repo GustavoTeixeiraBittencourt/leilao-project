@@ -1,38 +1,38 @@
 services:
   - type: web
-    name: leilao-api
-    runtime: node
-    plan: free
-    region: oregon
-    # NODE_ENV=production vale também no build do Render, e nesse modo o pnpm
-    # PULA as devDependencies. `tsc` (build) e `prisma` (migrate deploy no start)
-    # são devDependencies, então o install precisa de --prod=false.
-    buildCommand: "npm install -g pnpm@12 && pnpm install --frozen-lockfile --prod=false && pnpm --filter @leilao/api build"
-    # Roda `prisma migrate deploy` (nunca `migrate dev`) e sobe o servidor, que
-    # também inicia o worker de encerramento (fecha lotes vencidos ao acordar).
-    startCommand: "pnpm --filter @leilao/api start"
-    healthCheckPath: /health
-    envVars:
-      - key: NODE_VERSION
-        value: 22
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
-      - key: DATABASE_URL
-        fromDatabase:
-          name: leilao-db
-          property: connectionString
-      - key: CORS_ORIGIN
-        sync: false # preencher com a URL do deploy no Vercel (uma única origem)
-      - key: JWT_SECRET
-        generateValue: true
-      - key: AUDIT_SECRET
-        generateValue: true # NUNCA trocar depois do seed: invalida a cadeia de hash
-      - key: WORKER_INTERVAL_MS
-        value: 1500
+ NODE_ENV=production vale tambémname: leilao-api
+ NODE_ENV=production vale tambémruntime: node
+ NODE_ENV=production vale tambémplan: free
+ NODE_ENV=production vale tambémregion: oregon
+ NODE_ENV=production vale também# NODE_ENV=production vale também no build do Render, e nesse modo o pnpm
+ NODE_ENV=production vale também# PULA as devDependencies. `tsc` (build) e `prisma` (migrate deploy no start)
+ NODE_ENV=production vale também# são devDependencies, então o install precisa de --prod=false.
+ NODE_ENV=production vale tambémbuildCommand: "npm install -g pnpm@12 && pnpm install --frozen-lockfile --prod=false && pnpm --filter @leilao/api build"
+ NODE_ENV=production vale também# Roda `prisma migrate deploy` (nunca `migrate dev`) e sobe o servidor, que
+ NODE_ENV=production vale também# também inicia o worker de encerramento (fecha lotes vencidos ao acordar).
+ NODE_ENV=production vale tambémstartCommand: "pnpm --filter @leilao/api start"
+ NODE_ENV=production vale tambémhealthCheckPath: /health
+ NODE_ENV=production vale tambémenvVars:
+ NODE_ENV=production vale também  - key: NODE_VERSION
+ NODE_ENV=production vale também    value: 22
+ NODE_ENV=production vale também  - key: NODE_ENV
+ NODE_ENV=production vale também    value: production
+ NODE_ENV=production vale também  - key: PORT
+ NODE_ENV=production vale também    value: 3000
+ NODE_ENV=production vale também  - key: DATABASE_URL
+ NODE_ENV=production vale também    fromDatabase:
+ NODE_ENV=production vale também      name: leilao-db
+ NODE_ENV=production vale também      property: connectionString
+ NODE_ENV=production vale também  - key: CORS_ORIGIN
+ NODE_ENV=production vale também    sync: false # preencher com a URL do deploy no Vercel (uma única origem)
+ NODE_ENV=production vale também  - key: JWT_SECRET
+ NODE_ENV=production vale também    generateValue: true
+ NODE_ENV=production vale também  - key: AUDIT_SECRET
+ NODE_ENV=production vale também    generateValue: true # NUNCA trocar depois do seed: invalida a cadeia de hash
+ NODE_ENV=production vale também  - key: WORKER_INTERVAL_MS
+ NODE_ENV=production vale também    value: 1500
 
 databases:
   - name: leilao-db
-    plan: free
-    region: oregon
+ NODE_ENV=production vale tambémplan: free
+ NODE_ENV=production vale tambémregion: oregon

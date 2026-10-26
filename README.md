@@ -78,7 +78,10 @@ feitos no dashboard, já que exigem login na conta Render:
 
 1. "New" → "Blueprint", conectar este repositório GitHub.
 2. O Render cria `leilao-api` + `leilao-db`. `JWT_SECRET` e `AUDIT_SECRET` são gerados pelo Render e
-   `DATABASE_URL` vem do banco criado. Deixe `CORS_ORIGIN` em branco por enquanto.
+   `DATABASE_URL` vem do banco criado. `CORS_ORIGIN` **não pode ficar vazio**: a API valida o
+   ambiente na inicialização e aborta com `Invalid environment variables` (o pnpm mostra isso como
+   `ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL`). Preencha um valor provisório, por exemplo
+   `https://placeholder.invalid`, e troque no passo 3.
 3. Ao subir, o start roda `prisma migrate deploy` e depois o servidor, que também inicia o worker
    de encerramento (fecha na hora os lotes que venceram enquanto o serviço dormia).
 
