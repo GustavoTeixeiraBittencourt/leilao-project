@@ -58,6 +58,7 @@ Health check: `curl http://localhost:3000/health`.
 | `CORS_ORIGIN` | Origem do frontend permitida no CORS |
 | `JWT_SECRET` | Segredo para assinar os tokens de sessão |
 | `AUDIT_SECRET` | Segredo da cadeia de hash da auditoria — **nunca** fica no banco |
+| `WORKER_INTERVAL_MS` | Intervalo do worker que encerra e liquida lotes vencidos (padrão 1500) |
 
 ### `apps/web/.env`
 
@@ -67,24 +68,67 @@ Health check: `curl http://localhost:3000/health`.
 
 ## Deploy
 
-### Backend + Postgres (Render)
+Ordem importa por causa de uma dependência circular (a API precisa conhecer a URL do front para o
+CORS, e o front precisa conhecer a URL da API): **API → front → CORS → seed**.
 
-Este repositório inclui um [`render.yaml`](./render.yaml) (Render Blueprint) com o serviço web e
-o banco já descritos. Passos (feitos pelo usuário no dashboard, já que exigem login na conta
-Render):
+### 1. Backend + Postgres (Render)
 
-1. No dashboard do Render, "New" → "Blueprint", conectar este repositório GitHub.
-2. Render lê o `render.yaml` e cria o serviço `leilao-api` + o banco `leilao-db` automaticamente.
-3. `JWT_SECRET`/`AUDIT_SECRET` são gerados automaticamente pelo Render; `DATABASE_URL` é
-   preenchido a partir do banco criado. Só falta preencher `CORS_ORIGIN` com a URL do deploy no
-   Vercel (passo seguinte) depois que ela existir.
+O [`render.yaml`](./render.yaml) (Blueprint) descreve o serviço web e o banco. Os passos abaixo são
+feitos no dashboard, já que exigem login na conta Render:
 
-### Frontend (Vercel)
+1. "New" → "Blueprint", conectar este repositório GitHub.
+2. O Render cria `leilao-api` + `leilao-db`. `JWT_SECRET` e `AUDIT_SECRET` são gerados pelo Render e
+   `DATABASE_URL` vem do banco criado. Deixe `CORS_ORIGIN` em branco por enquanto.
+3. Ao subir, o start roda `prisma migrate deploy` e depois o servidor, que também inicia o worker
+   de encerramento (fecha na hora os lotes que venceram enquanto o serviço dormia).
 
-1. No dashboard da Vercel, "Add New" → "Project", conectar este repositório GitHub.
-2. Em "Root Directory", selecionar `apps/web` (framework preset: Vite é detectado automaticamente).
-3. Variável de ambiente `VITE_API_URL` = URL pública do serviço `leilao-api` no Render.
-4. Depois do primeiro deploy, voltar no Render e preencher `CORS_ORIGIN` com a URL gerada pela Vercel.
+Observação: o `buildCommand` usa `pnpm install --prod=false` de propósito. Com `NODE_ENV=production`
+o pnpm pularia as devDependencies, e `tsc` e `prisma` são necessárias no build e no start.
+
+### 2. Frontend (Vercel)
+
+1. "Add New" → "Project", conectar este repositório GitHub.
+2. "Root Directory" = `apps/web` (o preset Vite é detectado).
+3. Variável de ambiente `VITE_API_URL` = URL pública do `leilao-api` no Render.
+
+### 3. CORS
+
+No Render, em `leilao-api` → Environment, defina `CORS_ORIGIN` com a URL de produção do Vercel
+(origem exata, sem barra final). Só **uma** origem é aceita, então URLs de preview do Vercel não
+funcionam contra a API.
+
+### 4. Seed de demonstração
+
+O plano gratuito do Render não tem shell, então o seed roda **da sua máquina** contra o banco de
+produção, usando a *External Database URL* do `leilao-db`.
+
+> ⚠️ **Use o mesmo `AUDIT_SECRET` do Render.** A cadeia de hash é assinada com ele. Semear com um
+> segredo diferente faz toda a auditoria pública acusar "adulterado". Copie o valor em
+> `leilao-api` → Environment. Também nunca troque o `AUDIT_SECRET` depois do seed.
+
+```bash
+cd apps/api
+DATABASE_URL="<external database url>" \
+JWT_SECRET="qualquer-valor-com-16+-caracteres" \
+AUDIT_SECRET="<mesmo valor do Render>" \
+CORS_ORIGIN="https://<seu-app>.vercel.app" \
+NODE_ENV=production ALLOW_SEED_RESET=1 \
+pnpm prisma:seed
+```
+
+O seed **apaga todos os dados** do banco alvo (`TRUNCATE`); em `NODE_ENV=production` ele só roda
+com `ALLOW_SEED_RESET=1`. Os lotes "ao vivo" do seed têm horários relativos ao momento em que ele
+rodou e vencem com o tempo: rode o seed de novo perto da avaliação.
+
+### 5. Verificação
+
+- `GET <api>/health` responde `{"status":"ok",...}`.
+- O front mostra o status da API e o login com `licitante1@demo.com` / `demo12345` funciona.
+- `GET <api>/audit/lots/<id de um lote seed>` devolve `"verdict":"intact"`.
+- Plano gratuito: depois de ~15 min parado o Render hiberna e a primeira requisição leva 30–60 s.
+  O worker roda no boot e a leitura de um lote vencido também o fecha, então nada fica pendente.
+- O Postgres gratuito do Render pode expirar após um período; confira o prazo no dashboard. A
+  alternativa é um Postgres gratuito sem expiração (ex.: Neon), trocando só `DATABASE_URL`.
 
 ## Roadmap (etapas)
 

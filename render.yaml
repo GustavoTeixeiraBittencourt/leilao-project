@@ -4,9 +4,17 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: "npm install -g pnpm && pnpm install --frozen-lockfile && pnpm --filter @leilao/api build"
+    # NODE_ENV=production vale também no build do Render, e nesse modo o pnpm
+    # PULA as devDependencies. `tsc` (build) e `prisma` (migrate deploy no start)
+    # são devDependencies, então o install precisa de --prod=false.
+    buildCommand: "npm install -g pnpm && pnpm install --frozen-lockfile --prod=false && pnpm --filter @leilao/api build"
+    # Roda `prisma migrate deploy` (nunca `migrate dev`) e sobe o servidor, que
+    # também inicia o worker de encerramento (fecha lotes vencidos ao acordar).
     startCommand: "pnpm --filter @leilao/api start"
+    healthCheckPath: /health
     envVars:
+      - key: NODE_VERSION
+        value: 22
       - key: NODE_ENV
         value: production
       - key: PORT
@@ -16,11 +24,13 @@ services:
           name: leilao-db
           property: connectionString
       - key: CORS_ORIGIN
-        sync: false # preencher com a URL do deploy no Vercel
+        sync: false # preencher com a URL do deploy no Vercel (uma única origem)
       - key: JWT_SECRET
         generateValue: true
       - key: AUDIT_SECRET
-        generateValue: true
+        generateValue: true # NUNCA trocar depois do seed: invalida a cadeia de hash
+      - key: WORKER_INTERVAL_MS
+        value: 1500
 
 databases:
   - name: leilao-db
