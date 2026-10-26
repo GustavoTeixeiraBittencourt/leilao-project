@@ -39,3 +39,19 @@ preencher o campo "como usei IA" do processo seletivo.
 - Revisar pessoalmente o módulo de auth (`apps/api/src/modules/auth/`) e a migration customizada
   (`apps/api/prisma/migrations/*/migration.sql`) linha a linha antes de explicar em entrevista —
   são os trechos mais "não óbvios" desta etapa.
+
+---
+
+## Design no Figma (2026-10-26)
+
+**O que a IA gerou** (via servidor MCP do Figma, executando JavaScript da Plugin API):prototipação das páginas do sistema com base no wireframe de baixa compatibilidade gerada por mim e  UI/UX patterns.
+
+**O que precisa de revisão humana:**
+- Conferir se o design reflete as regras de negócio (anti-sniping, comprometido x disponível,
+  cancelamento só sem lances, privacidade por alias) e se nenhuma mensagem promete algo que o
+  backend não sustenta.
+- Os dados exibidos (obras, valores, lances, hashes) são demonstrativos; nada ali é resultado real de verificação criptográfica.
+- Contraste: foi checado só por estimativa nos tokens; rodar uma verificação real antes de
+  fechar a implementação.
+- Imagens são placeholders; trocar por imagens IIIF reais (ou capturas) se o design for anexado
+  à entrega.

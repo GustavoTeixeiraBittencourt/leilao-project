@@ -109,3 +109,38 @@ Bearer token evita toda a complexidade de cookie cross-origin.
 **Consequência**: token em `localStorage` é acessível via XSS (trade-off conhecido, aceitável
 aqui porque é uma simulação sem dinheiro real e sem dados sensíveis de terceiros). Mitigação
 parcial: o token nunca é logado e CORS restringe quem pode conversar com a API.
+
+---
+
+## 2026-10-26 — Design das telas no Figma antes da Etapa 4 (marca provisória "ACERVO")
+
+**Decisão**: desenhar o design system e as 8 áreas funcionais no Figma antes de implementar o
+frontend, com identidade editorial própria (papel `#F5F1E8`, carvão `#24251F`, óxido `#8B382D`;
+DM Serif Display para títulos, Inter para interface e números). "ACERVO" é nome conceitual
+provisório, sem verificação de disponibilidade comercial.
+
+**Contexto**: o arquivo `Leilão Online – UI` tem 4 páginas (Foundations, Components, Product
+Screens, Prototype & States). Tokens viraram variáveis do Figma com a mesma estrutura que deve
+virar CSS custom properties no React (`--color-bg-page`, `--space-4`, `--radius-md`…), com
+modos Light/Dark (só o claro foi desenhado ate o momento da prototpação do frontend). Cada componente de leilão (BidPanel, Countdown,
+BidHistory, AuditVerdict, ReceiptSeal…) tem variantes que espelham os estados de negócio e os
+códigos de erro estáveis do backend (`BID_BELOW_MIN`, `INSUFFICIENT_FUNDS`, `ALREADY_LEADING`,
+`LOT_NOT_STARTED`, `LOT_CLOSED`, `AUCTIONEER_CANNOT_BID`).
+
+**Consequências e limites conhecidos**:
+- Imagens das obras são placeholders rotulados: o plugin do Figma não busca URLs externas e a
+  API do museu bloqueia clientes não-navegador (ver seção 6 do `CLAUDE.md`). Na implementação a
+  imagem é `<img>` IIIF carregada pelo browser, com fallback (variante "Image unavailable").
+- Valores, lances, horários, hashes e selos do protótipo são **demonstrativos**; as telas de
+  auditoria e comprovante dizem isso explicitamente. O selo "verificado" só pode aparecer quando
+  a auditoria real recalcular a cadeia e ela conferir.
+- Mobile foi desenhado para Vitrine e Sala do lote (incluindo painel de lance em bottom sheet);
+  as demais telas foram desenhadas só em desktop.
+- Painel de lance é `position: sticky` no desktop e barra fixa no rodapé no mobile (anotado nas
+  camadas do Figma). A coluna comprometida da carteira não aparece no extrato porque é derivada
+  dos lotes em que o usuário lidera (regra do `CLAUDE.md` seção 4).
+- Duas instâncias foram desanexadas no mobile (galeria com imagem de 300px e histórico com
+  colunas compactas) porque o Figma não permite redimensionar filhos de instância; na
+  implementação isso é só CSS responsivo.
+- O prototype navegável existe só dentro da página "Product Screens" (o Figma não liga páginas
+  diferentes); a página "Prototype & States" reúne os estados e um índice de fluxos.
