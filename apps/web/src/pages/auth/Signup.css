@@ -1,0 +1,41 @@
+/* Escolha de papel (Figma: Role Choice). Dois cartões lado a lado; o selecionado
+   ganha fundo e borda de 2px na cor da marca. O <input> real fica oculto, mas
+   continua focável: o foco do teclado aparece no cartão (:focus-within). */
+.roles {
+  display: flex;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.role {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+}
+.role:hover { border-color: var(--color-border-strong); }
+.role:focus-within { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+
+.role--selected {
+  padding: calc(var(--space-4) - 1px);
+  background: var(--color-brand-subtle);
+  border: 2px solid var(--color-brand-primary);
+}
+
+.role__top { display: flex; align-items: center; justify-content: space-between; }
+.role__mark { color: var(--color-text-secondary); }
+.role--selected .role__mark { color: var(--color-brand-primary); }
+
+@media (max-width: 420px) {
+  .roles { flex-direction: column; }
+}
