@@ -8,6 +8,8 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().min(1, "CORS_ORIGIN is required"),
   JWT_SECRET: z.string().min(16, "JWT_SECRET must be at least 16 characters"),
   AUDIT_SECRET: z.string().min(16, "AUDIT_SECRET must be at least 16 characters"),
+  // Intervalo do worker de encerramento (ms). 1–2s pelo CLAUDE.md.
+  WORKER_INTERVAL_MS: z.coerce.number().int().min(200).default(1500),
 });
 
 const parsed = envSchema.safeParse(process.env);

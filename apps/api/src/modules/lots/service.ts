@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../db/client.js";
 import { AppError } from "../../lib/errors.js";
+import { closeIfDue } from "../settlement/service.js";
 import type { CreateLotInput } from "./schemas.js";
 
 export async function createLot(auctioneerId: string, input: CreateLotInput) {
@@ -25,12 +26,20 @@ export async function createLot(auctioneerId: string, input: CreateLotInput) {
 }
 
 export async function getLot(id: string) {
-  const lot = await prisma.lot.findUnique({
-    where: { id },
-    include: { leader: { select: { publicAlias: true } } },
-  });
+  const load = () =>
+    prisma.lot.findUnique({
+      where: { id },
+      include: { leader: { select: { publicAlias: true } } },
+    });
+
+  let lot = await load();
   if (!lot) {
     throw new AppError("NOT_FOUND", "Lot not found");
+  }
+  // Fechamento preguiçoso: se o worker não passou ainda (ou está parado), esta
+  // leitura liquida o lote vencido e devolve o estado já encerrado.
+  if (await closeIfDue(lot)) {
+    lot = (await load()) ?? lot;
   }
   return lot;
 }

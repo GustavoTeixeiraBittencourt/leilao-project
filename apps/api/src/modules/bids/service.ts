@@ -3,6 +3,7 @@ import { getDbNow, lockBidder, lockLot } from "../../db/locks.js";
 import { AppError } from "../../lib/errors.js";
 import { publishLotEvent } from "../../lib/events.js";
 import { computeBidHash, genesisHash } from "../../lib/hash-chain.js";
+import { closeIfDue } from "../settlement/service.js";
 import { getBalance } from "../wallet/service.js";
 
 export const ANTI_SNIPING_WINDOW_MS = 2 * 60 * 1000;
@@ -127,8 +128,9 @@ export async function placeBid(userId: string, lotId: string, amountCents: numbe
 }
 
 export async function listBids(lotId: string) {
-  const exists = await prisma.lot.findUnique({ where: { id: lotId }, select: { id: true } });
-  if (!exists) throw new AppError("NOT_FOUND", "Lot not found");
+  const lot = await prisma.lot.findUnique({ where: { id: lotId }, select: { id: true, status: true, endsAt: true } });
+  if (!lot) throw new AppError("NOT_FOUND", "Lot not found");
+  await closeIfDue(lot);
 
   return prisma.bid.findMany({
     where: { lotId },
