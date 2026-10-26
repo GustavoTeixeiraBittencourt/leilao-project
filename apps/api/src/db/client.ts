@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -14,10 +14,5 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Services de leitura (ex.: saldo) funcionam tanto fora quanto dentro de uma
-// $transaction. Prisma.TransactionClient colapsa para {} neste tsconfig
-// (NodeNext + skipLibCheck escondem que runtime.ITXClientDenyList não resolve),
-// então o tipo é declarado à mão com os mesmos métodos que o Prisma nega no tx.
-export type DbClient = Omit<
-  PrismaClient,
-  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
->;
+// $transaction: PrismaClient é estruturalmente atribuível a TransactionClient.
+export type DbClient = Prisma.TransactionClient;

@@ -1,0 +1,35 @@
+import { EventEmitter } from "node:events";
+
+// Pub/sub em memória, por lote. Limitação conhecida e documentada: funciona
+// em instância única; com várias instâncias do backend, um lance numa não
+// chega aos assinantes SSE da outra (precisaria de Redis/LISTEN-NOTIFY).
+
+export type BidPlacedEvent = {
+  type: "bid_placed";
+  lotId: string;
+  bid: { seq: number; bidderAlias: string; amountCents: number; placedAt: string };
+  currentBidCents: number;
+  bidCount: number;
+  leaderAlias: string;
+  endsAt: string;
+  // true quando o anti-sniping empurrou o encerramento neste lance.
+  extended: boolean;
+  serverNow: string;
+};
+
+export type LotEvent = BidPlacedEvent;
+
+const emitter = new EventEmitter();
+// Uma sala com muitos espectadores gera muitos assinantes do mesmo canal.
+emitter.setMaxListeners(0);
+
+const channel = (lotId: string) => `lot:${lotId}`;
+
+export function publishLotEvent(event: LotEvent): void {
+  emitter.emit(channel(event.lotId), event);
+}
+
+export function subscribeLotEvents(lotId: string, handler: (event: LotEvent) => void): () => void {
+  emitter.on(channel(lotId), handler);
+  return () => emitter.off(channel(lotId), handler);
+}
