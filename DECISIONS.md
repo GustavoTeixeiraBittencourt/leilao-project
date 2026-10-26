@@ -144,3 +144,45 @@ códigos de erro estáveis do backend (`BID_BELOW_MIN`, `INSUFFICIENT_FUNDS`, `A
   implementação isso é só CSS responsivo.
 - O prototype navegável existe só dentro da página "Product Screens" (o Figma não liga páginas
   diferentes); a página "Prototype & States" reúne os estados e um índice de fluxos.
+
+---
+
+## 2026-10-26 — Etapa 2: lances, carteira e anti-sniping
+
+**Decisões**:
+- **Hash chain entrou na Etapa 2** (e não na 3): `bids.prev_hash/hash` são NOT NULL, então todo
+  lance já nasce encadeado. Em `src/lib/hash-chain.ts` ficam só o genesis e o hash por lance; a
+  *auditoria* (recalcular a cadeia, comparar com o selo, achar o ponto de quebra) continua na Etapa 3.
+- **Genesis exclui `ends_at`**: o anti-sniping altera `ends_at` depois da criação, então o genesis
+  usa só campos imutáveis (`lotId`, `auctioneerId`, lance inicial, incremento, `startsAt`).
+- **`placed_at` = `clock_timestamp()` do banco, lido DEPOIS dos locks**. `now()` devolveria o início
+  da transação (defasado se o lance esperou na fila). O `Date` do JS trunca para ms, igual à coluna
+  `Timestamptz(3)`, então o instante assinado no hash é exatamente o gravado.
+- **Papel validado no banco**: o `lockBidder` devolve o `role` da linha do usuário; a rota usa só
+  `authenticate` (sem `requireRole("bidder")`) para o leiloeiro receber `AUCTIONEER_CANNOT_BID`
+  (código estável) em vez de um `FORBIDDEN` genérico.
+- **Ordem de validação**: papel → lote fechado/cancelado/vencido → não iniciado → já lidera →
+  abaixo do mínimo → saldo. Lote vencido (open com `ends_at <= now`, ainda sem worker) conta como
+  `LOT_CLOSED`.
+- **Depósito**: teto de R$ 1.000.000,00 por operação (`MAX_DEPOSIT_CENTS`), só licitante.
+- **`POST /lots` é mínimo**: existe para criar lotes de teste/seed; exige `endsAt` futuro. Painel
+  completo, busca na API externa e cancelamento ficam para a Etapa 4. `GET /lots/:id` é público.
+- **Tempo real**: `src/lib/events.ts` é pub/sub em memória; o lance publica `bid_placed` *após* o
+  commit. O endpoint SSE em si entra na Etapa 4.
+
+**Regra para a Etapa 3**: o worker de liquidação deve pegar os locks na MESMA ordem
+(lote → licitante) que o lance; ver `src/db/locks.ts`.
+
+**Tooling — achado**: o client gerado do Prisma importa `@prisma/client/runtime/library.js`, mas o
+`exports` do pacote só declara `./runtime/library`. Com `moduleResolution: NodeNext` o import não
+resolvia e, com `skipLibCheck`, o erro ficava mudo: `Prisma.TransactionClient` e o `tx` de
+`$transaction` viravam `{}`. Corrigido com `paths` no `tsconfig.json`. Se o `tx` perder o
+autocompletar de novo, olhar aqui primeiro.
+
+**Testes**: não apagam o que criam (`wallet_entries`/`bids` são append-only e têm FK), usam ids e
+e-mails únicos. Isso deixa lixo no banco de dev; o seed da Etapa 3 deve resetar o banco. Se
+incomodar, a alternativa é um banco `leilao_test` separado.
+
+**Validação por mutação**: removendo o `lockBidder` de propósito, o teste de lances simultâneos em
+5 lotes com saldo para 1 passa a aceitar os 5 (comprometimento acima do saldo). Ou seja, o teste
+de concorrência de fato protege essa regra.

@@ -55,3 +55,22 @@ preencher o campo "como usei IA" do processo seletivo.
   fechar a implementação.
 - Imagens são placeholders; trocar por imagens IIIF reais (ou capturas) se o design for anexado
   à entrega.
+
+---
+
+## Etapa 2: lances, carteira e anti-sniping (2026-10-26)
+
+**O que a IA gerou**: `src/lib/hash-chain.ts`, `src/db/locks.ts`, `src/lib/events.ts`, módulos
+`wallet`, `lots` (mínimo) e `bids` (transação de lance), correção do `tsconfig.json` (`paths` do
+runtime do Prisma) e os testes `hash-chain`, `wallet`, `lots` e `bids` (38 testes no total, 19 só
+de lances, incluindo concorrência).
+
+**O que precisa de revisão humana** (explicar em entrevista):
+- `src/modules/bids/service.ts`: a transação inteira. Entender por que a ordem de locks é
+  lote → licitante, por que o lock do licitante existe (corrida de saldo entre lotes) e por que o
+  evento SSE só sai depois do commit.
+- `src/db/locks.ts`: `FOR UPDATE` e o motivo de `clock_timestamp()` no lugar de `now()`.
+- `src/lib/hash-chain.ts`: o que entra no hash e por que o genesis não inclui `ends_at`.
+- Anti-sniping: `ends_at = max(ends_at, agora + 2min)`; nunca encurta.
+- Rodar a suíte e fazer a mutação do `lockBidder` pessoalmente para ver o teste falhar.
+- Os testes não limpam o banco (ledger append-only); conferir se a estratégia serve.
