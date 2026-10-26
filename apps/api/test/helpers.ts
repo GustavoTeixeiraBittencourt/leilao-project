@@ -30,3 +30,28 @@ export function authHeader(token: string) {
 export async function fund(userId: string, amountCents: number) {
   await prisma.walletEntry.create({ data: { userId, kind: "deposit", amountCents: BigInt(amountCents) } });
 }
+
+type LotOptions = {
+  auctioneerId: string;
+  startsInMs?: number;
+  endsInMs?: number;
+  startingBidCents?: number;
+  minIncrementCents?: number;
+};
+
+// Cria o lote direto no banco (sem passar pela API) para os testes poderem
+// escolher horários arbitrários, inclusive já em andamento ou prestes a encerrar.
+export async function createLotRow(options: LotOptions) {
+  const now = Date.now();
+  return prisma.lot.create({
+    data: {
+      auctioneerId: options.auctioneerId,
+      externalId: randomUUID(),
+      title: "Test lot",
+      startingBidCents: BigInt(options.startingBidCents ?? 10_000),
+      minIncrementCents: BigInt(options.minIncrementCents ?? 1_000),
+      startsAt: new Date(now + (options.startsInMs ?? -60_000)),
+      endsAt: new Date(now + (options.endsInMs ?? 3_600_000)),
+    },
+  });
+}
