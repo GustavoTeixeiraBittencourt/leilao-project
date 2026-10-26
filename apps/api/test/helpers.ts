@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
+import { Prisma } from "@prisma/client";
 import { prisma } from "../src/db/client.js";
 import { generatePublicAlias } from "../src/lib/public-alias.js";
 
@@ -8,15 +9,24 @@ import { generatePublicAlias } from "../src/lib/public-alias.js";
 // únicos, então execuções repetidas não colidem; o seed da Etapa 3 reseta o banco.
 
 export async function createUser(role: "auctioneer" | "bidder") {
-  return prisma.user.create({
-    data: {
-      email: `test-${randomUUID()}@example.com`,
-      passwordHash: "not-a-real-hash",
-      role,
-      displayName: `Test ${role}`,
-      publicAlias: generatePublicAlias(role),
-    },
-  });
+  // O alias tem só 4 hex (65.536 valores) e é UNIQUE; com o banco de dev
+  // acumulando usuários de teste, colisões acontecem. Tenta de novo.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await prisma.user.create({
+        data: {
+          email: `test-${randomUUID()}@example.com`,
+          passwordHash: "not-a-real-hash",
+          role,
+          displayName: `Test ${role}`,
+          publicAlias: generatePublicAlias(role),
+        },
+      });
+    } catch (error) {
+      const collision = error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
+      if (!collision || attempt >= 10) throw error;
+    }
+  }
 }
 
 export function tokenFor(app: FastifyInstance, user: { id: string; role: "auctioneer" | "bidder" }) {
