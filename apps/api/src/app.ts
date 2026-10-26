@@ -5,6 +5,8 @@ import { auditRoutes } from "./modules/audit/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { bidRoutes } from "./modules/bids/routes.js";
 import { lotRoutes } from "./modules/lots/routes.js";
+import { meRoutes } from "./modules/me/routes.js";
+import { receiptRoutes } from "./modules/receipts/routes.js";
 import { walletRoutes } from "./modules/wallet/routes.js";
 import authPlugin from "./plugins/auth.js";
 import { registerErrorHandler } from "./plugins/error-handler.js";
@@ -28,6 +30,8 @@ export async function buildApp() {
   await app.register(lotRoutes);
   await app.register(bidRoutes);
   await app.register(auditRoutes);
+  await app.register(receiptRoutes);
+  await app.register(meRoutes);
 
   return app;
 }
