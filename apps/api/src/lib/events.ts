@@ -27,7 +27,13 @@ export type LotClosedEvent = {
   serverNow: string;
 };
 
-export type LotEvent = BidPlacedEvent | LotClosedEvent;
+export type LotCancelledEvent = {
+  type: "lot_cancelled";
+  lotId: string;
+  serverNow: string;
+};
+
+export type LotEvent = BidPlacedEvent | LotClosedEvent | LotCancelledEvent;
 
 const emitter = new EventEmitter();
 // Uma sala com muitos espectadores gera muitos assinantes do mesmo canal.

@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../db/client.js";
-import { searchLotIds } from "../../db/locks.js";
+import { getDbNow, lockLot, searchLotIds } from "../../db/locks.js";
+import { publishLotEvent } from "../../lib/events.js";
 import { AppError } from "../../lib/errors.js";
 import { closeIfDue } from "../settlement/service.js";
 import type { CreateLotInput, ListLotsQuery } from "./schemas.js";
@@ -49,6 +50,38 @@ export async function getLot(id: string) {
     lot = (await load()) ?? lot;
   }
   return lot;
+}
+
+// Cancelamento: só o dono, só de lote ainda aberto (agendado ou ao vivo) e SEM
+// lances. A checagem de "sem lances" acontece sob o FOR UPDATE do lote, o mesmo
+// lock que o lance usa: um lance simultâneo ou entra antes (e o cancelamento
+// recebe LOT_HAS_BIDS) ou depois (e o lance recebe LOT_CLOSED). Nunca os dois.
+// Sem lances não há dinheiro comprometido, então não há estorno a fazer.
+export async function cancelLot(userId: string, lotId: string) {
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const lot = await lockLot(tx, lotId);
+      if (!lot) throw new AppError("NOT_FOUND", "Lot not found");
+      if (lot.auctioneer_id !== userId) {
+        throw new AppError("FORBIDDEN", "Only the auctioneer who created this lot can cancel it");
+      }
+
+      const now = await getDbNow(tx);
+      if (lot.status !== "open" || lot.ends_at <= now) {
+        throw new AppError("LOT_NOT_CANCELLABLE", "Only lots that have not ended can be cancelled");
+      }
+      if (lot.bid_count > 0) {
+        throw new AppError("LOT_HAS_BIDS", "A lot that already has bids cannot be cancelled");
+      }
+
+      return tx.lot.update({ where: { id: lotId }, data: { status: "cancelled" }, include: lotInclude });
+    },
+    { timeout: 10_000, maxWait: 5_000 },
+  );
+
+  // Só depois do commit; quem está na sala do lote precisa ver que ele saiu.
+  publishLotEvent({ type: "lot_cancelled", lotId, serverNow: new Date().toISOString() });
+  return result;
 }
 
 type Phase = NonNullable<ListLotsQuery["phase"]>;

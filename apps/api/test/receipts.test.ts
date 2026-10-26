@@ -5,6 +5,8 @@ import { prisma } from "../src/db/client.js";
 import { settleLot } from "../src/modules/settlement/service.js";
 import { authHeader, createLotRow, createUser, fund, tokenFor } from "./helpers.js";
 
+const HOUR = 3_600_000;
+
 describe("receipts and personal views", () => {
   let app: FastifyInstance;
 
@@ -125,7 +127,7 @@ describe("receipts and personal views", () => {
       const unsold = await createLotRow({ auctioneerId: auctioneer.id });
       await prisma.lot.update({ where: { id: unsold.id }, data: { endsAt: new Date(Date.now() - 1_000) } });
       await settleLot(unsold.id);
-      const live = await createLotRow({ auctioneerId: auctioneer.id }); // ainda aberto: fora do resultado
+      const live = await createLotRow({ auctioneerId: auctioneer.id }); // ainda aberto, sem lances
       const other = await createUser("auctioneer");
       await soldLot(other.id, 99_000); // de outro leiloeiro: não aparece
 
@@ -134,13 +136,36 @@ describe("receipts and personal views", () => {
       expect(response.statusCode).toBe(200);
       const body = response.json();
       expect(body.totalReceivedCents).toBe(55_000);
-      expect(body.results).toHaveLength(3);
-      const byLot = new Map(body.results.map((row: { lotId: string }) => [row.lotId, row]));
-      expect(byLot.get(sold1.lot.id)).toMatchObject({ sold: true, finalPriceCents: 20_000, winnerAlias: sold1.winner.user.publicAlias });
+      expect(body.lots).toHaveLength(4); // só os dele: o lote do outro leiloeiro não entra
+      const byLot = new Map(body.lots.map((row: { id: string }) => [row.id, row]));
+      expect(byLot.get(sold1.lot.id)).toMatchObject({
+        sold: true,
+        phase: "ended",
+        finalPriceCents: 20_000,
+        winnerAlias: sold1.winner.user.publicAlias,
+        canCancel: false,
+      });
       expect(byLot.get(sold2.lot.id)).toMatchObject({ sold: true, finalPriceCents: 35_000 });
-      expect(byLot.get(unsold.id)).toMatchObject({ sold: false, finalPriceCents: null, winnerAlias: null, bidCount: 0 });
-      expect(byLot.has(live.id)).toBe(false);
+      expect(byLot.get(unsold.id)).toMatchObject({ sold: false, finalPriceCents: null, winnerAlias: null, bidCount: 0, canCancel: false });
+      expect(byLot.get(live.id)).toMatchObject({ phase: "live", sold: false, canCancel: true });
       expect(response.body).not.toContain(sold1.winner.user.email);
+    });
+
+    it("lists cancelled and scheduled lots and says which ones can be cancelled", async () => {
+      const auctioneer = await createUser("auctioneer");
+      const scheduled = await createLotRow({ auctioneerId: auctioneer.id, startsInMs: HOUR, endsInMs: 2 * HOUR });
+      const cancelled = await createLotRow({ auctioneerId: auctioneer.id });
+      await prisma.lot.update({ where: { id: cancelled.id }, data: { status: "cancelled" } });
+      const withBids = await createLotRow({ auctioneerId: auctioneer.id });
+      const bidder = await newBidder();
+      await bid(bidder.token, withBids.id, 10_000);
+
+      const response = await app.inject({ method: "GET", url: "/me/auctions", headers: authHeader(tokenFor(app, auctioneer)) });
+
+      const byLot = new Map(response.json().lots.map((row: { id: string }) => [row.id, row]));
+      expect(byLot.get(scheduled.id)).toMatchObject({ phase: "scheduled", canCancel: true });
+      expect(byLot.get(cancelled.id)).toMatchObject({ phase: "cancelled", status: "cancelled", canCancel: false });
+      expect(byLot.get(withBids.id)).toMatchObject({ phase: "live", bidCount: 1, canCancel: false });
     });
 
     it("is auctioneer-only", async () => {
