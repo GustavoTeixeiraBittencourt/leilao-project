@@ -1,0 +1,51 @@
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: 600 14px/20px var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.btn--md { min-height: 44px; padding: 0 var(--space-6); } /* alvo de toque >= 44px */
+.btn--sm { min-height: 36px; padding: 0 var(--space-4); }
+
+/* Hover: escurece um passo (primary -> primary-hover); secundários ganham bg-subtle.
+   Pressionado: mesmo token do hover + 1px para baixo. */
+.btn--primary { background: var(--color-brand-primary); color: var(--color-text-on-brand); }
+.btn--primary:hover { background: var(--color-brand-primary-hover); }
+
+.btn--secondary { background: var(--color-bg-surface); color: var(--color-text-primary); border-color: var(--color-border-strong); }
+.btn--secondary:hover { background: var(--color-bg-subtle); }
+
+/* Ação destrutiva (ex.: "Cancelar lote"): contorno na cor da marca. */
+.btn--danger { background: var(--color-bg-surface); color: var(--color-brand-primary); border-color: var(--color-brand-primary); }
+.btn--danger:hover { background: var(--color-brand-subtle); }
+
+.btn:active:not(:disabled) { transform: translateY(1px); }
+
+/* Desabilitado: texto secundário sobre bg-subtle, sem sombra e cursor not-allowed.
+   Nunca só opacidade (o estado precisa ser legível sem depender dela). */
+.btn:disabled {
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  border-color: transparent;
+  cursor: not-allowed;
+}
+
+.btn__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--radius-full);
+  animation: btn-spin 700ms linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}

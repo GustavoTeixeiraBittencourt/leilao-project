@@ -1,0 +1,106 @@
+/* Reset mínimo + tipografia (estilos de texto do Figma) + regras de interação. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Foco: anel de 2px em focus/ring com offset de 2px, sempre visível no teclado. */
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ---- Estilos de texto (nomes = os do Figma) ---- */
+.t-display-xl { font: 400 72px/76px var(--font-display); letter-spacing: -1px; }
+.t-display-l  { font: 400 56px/60px var(--font-display); letter-spacing: -0.5px; }
+.t-h1         { font: 400 40px/46px var(--font-display); }
+.t-h2         { font: 400 30px/36px var(--font-display); }
+.t-h3         { font: 400 22px/28px var(--font-display); }
+
+/* Preços, saldos, contadores e horários: Inter com números tabulares. */
+.t-number-xl  { font: 600 48px/52px var(--font-ui); letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.t-number-l   { font: 600 32px/38px var(--font-ui); letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+.t-number-m   { font: 600 20px/26px var(--font-ui); font-variant-numeric: tabular-nums; }
+.num          { font-variant-numeric: tabular-nums; }
+
+.t-body-l     { font: 400 18px/28px var(--font-ui); }
+.t-body-m     { font: 400 16px/24px var(--font-ui); }
+.t-body-s     { font: 400 14px/20px var(--font-ui); }
+.t-label-m    { font: 600 14px/20px var(--font-ui); }
+.t-label-s    { font: 600 12px/16px var(--font-ui); }
+.t-caption    { font: 400 12px/16px var(--font-ui); }
+.t-overline   { font: 600 12px/16px var(--font-ui); letter-spacing: 0.12em; text-transform: uppercase; }
+
+.text-secondary { color: var(--color-text-secondary); }
+
+/* Leitor de tela apenas. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Contêiner da página: largura máxima e margens do grid. */
+.container {
+  width: 100%;
+  max-width: calc(var(--layout-max) + 2 * var(--layout-margin));
+  margin: 0 auto;
+  padding-inline: var(--layout-margin);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

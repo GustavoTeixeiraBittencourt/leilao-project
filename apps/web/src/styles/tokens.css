@@ -1,0 +1,81 @@
+/*
+ * Tokens de design extraídos do Figma ("Leilão Online – UI", página 01 — Foundations).
+ * Os nomes são os mesmos das variáveis do Figma, então um valor que mude lá muda aqui
+ * no mesmo lugar. Os componentes usam SÓ os tokens semânticos (cor/texto/borda...).
+ * Tema claro apenas: o Dark foi mapeado no Figma mas não desenhado (fica fora do escopo).
+ */
+:root {
+  /* Superfície */
+  --color-bg-page: #f5f1e8;
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: #ece6d8;
+  --color-bg-inverse: #24251f;
+
+  /* Texto */
+  --color-text-primary: #24251f;
+  --color-text-secondary: #6b6a5f;
+  --color-text-inverse: #f5f1e8;
+  --color-text-on-brand: #ffffff;
+
+  /* Borda e foco */
+  --color-border-default: #dcd6c9;
+  --color-border-strong: #24251f;
+  --color-focus-ring: #8b382d;
+
+  /* Marca */
+  --color-brand-primary: #8b382d;
+  --color-brand-primary-hover: #6f2b22;
+  --color-brand-subtle: #f1dad5;
+
+  /* Semântica */
+  --color-success-fg: #2f6b4a;
+  --color-success-bg: #ddebdf;
+  --color-warning-fg: #8a5a0b;
+  --color-warning-bg: #f7e8c8;
+  --color-danger-fg: #b3261e;
+  --color-danger-bg: #f8dad6;
+
+  /* Espaçamento: escala 4/8/12/16/24/32/48/64/96 (o número é o degrau do Figma) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+
+  /* Raios pequenos: a interface é editorial, não "bolhuda" */
+  --radius-none: 0;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-full: 999px;
+
+  /* Elevação */
+  --elevation-1: 0 1px 3px rgba(36, 37, 31, 0.08);
+  --elevation-2: 0 4px 16px rgba(36, 37, 31, 0.12);
+
+  /* Tipografia */
+  --font-display: "DM Serif Display", Georgia, serif;
+  --font-ui: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Layout (grid do Figma: desktop 12 col, margem 64, largura máx. 1312) */
+  --layout-max: 1312px;
+  --layout-margin: var(--space-16);
+  --layout-gutter: var(--space-6);
+}
+
+/* Tablet 768–1199: 8 colunas, margem 32, gutter 16. Mobile < 768: margem 16. */
+@media (max-width: 1199px) {
+  :root {
+    --layout-margin: var(--space-8);
+    --layout-gutter: var(--space-4);
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --layout-margin: var(--space-4);
+  }
+}
