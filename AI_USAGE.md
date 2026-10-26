@@ -99,3 +99,24 @@ dump aberto do museu), a correção do `signup` (retry de alias) e os testes `se
   funciona no Postgres do docker-compose). Em um banco gerenciado sem esse privilégio, esses testes
   precisariam de outra estratégia.
 - Seed: roda `TRUNCATE`. Conferir o guard de produção antes de qualquer deploy.
+
+---
+
+## Etapa 4, Parte A: endpoints para as telas (2026-10-26)
+
+**O que a IA gerou**: `GET /lots` (listagem com contagens), `POST /lots/:id/cancel`, ampliação do
+`/me/auctions`, SSE `GET /lots/:id/events`, `GET /external/artworks` (busca com degradação) e os testes
+`lots-list`, `lot-cancel`, `sse` e `external` (120 testes no total). A análise do Figma (tokens, telas e
+estados) foi feita via servidor MCP do Figma, em modo leitura.
+
+**O que precisa de revisão humana** (explicar em entrevista):
+- `modules/lots/service.ts` (`cancelLot`): por que a checagem de "sem lances" tem que ficar sob o
+  `FOR UPDATE` do lote e o que acontece numa corrida entre cancelar e dar lance.
+- `modules/events/routes.ts`: `reply.hijack()`, o repasse manual dos cabeçalhos CORS, o heartbeat e a
+  limpeza ao desconectar. É o código mais fácil de errar sem perceber (vazamento de assinantes).
+- `modules/external/artic.ts`: o fallback local e o cooldown. **A API real nunca foi exercitada** (403 do
+  Cloudflare, inclusive daqui); só respostas simuladas. Não afirmar em entrevista que a busca ao vivo funciona.
+- Mudança de contrato do `/me/auctions` (`results` -> `lots`).
+- Meus erros nesta rodada, para saber o que conferir: o `sed` de uma tentativa anterior corrompeu o
+  `render.yaml` (corrigido); e uma vez tentei repetir um `curl` com User-Agent de navegador para
+  contornar o anti-bot, o que foi bloqueado e **não deve ser feito**.

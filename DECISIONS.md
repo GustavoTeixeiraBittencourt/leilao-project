@@ -246,3 +246,54 @@ se o projeto crescer, aumentar o sufixo.
 
 **Dev**: o banco de dev acumula dados dos testes (ledger append-only). Rodar `pnpm prisma:seed`
 limpa tudo.
+
+---
+
+## 2026-10-26 — Etapa 4, Parte A: endpoints que as telas exigem
+
+Revisão do plano depois de ver o Figma: os tokens, componentes e estados já estavam desenhados, então
+a Parte A ficou menor (4 entregas) e cada tela do front só consome o que já existe.
+
+**Decisões**:
+- **`GET /lots`** (vitrine, público): sem paginação; `phase` (`live|scheduled|ended`), `q`, `limit` (1–50)
+  e **contagens por fase** sempre (as abas do mobile mostram "Ao vivo · 6"). Sem `phase` devolve só as
+  contagens. Fases derivadas do horário; `ended` inclui `open` vencido. **Cancelado nunca aparece**,
+  nem nas contagens. Sem fechamento preguiçoso na listagem (uma leitura em massa não dispara várias
+  liquidações). `lotDto` ganhou `winnerAlias` e `finalPriceCents`.
+- **Busca por título/artista em SQL cru** (`searchLotIds` em `db/locks.ts`) com
+  `position(lower(q) in lower(...))`. Dois defeitos do Prisma encontrados pelos testes: o filtro JSON não
+  tem modo insensitive e o `contains` **não escapa `%` e `_`** (digitar `%` casaria tudo). Escala: a
+  busca traz os ids e o resto segue em Prisma; num catálogo grande viraria coluna indexada.
+- **`POST /lots/:id/cancel`**: só o dono, só lote aberto (agendado ou ao vivo) e **sem lances**, checado
+  sob o `FOR UPDATE` do lote (o mesmo do lance: ou o lance entra e o cancelamento recebe
+  `LOT_HAS_BIDS`, ou o cancelamento entra e o lance recebe `LOT_CLOSED`). Códigos novos:
+  `LOT_HAS_BIDS` e `LOT_NOT_CANCELLABLE` (409). Sem lances não há dinheiro comprometido: sem estorno.
+  Publica `lot_cancelled` no SSE.
+- **`GET /me/auctions` mudou de contrato**: agora devolve **todos** os lotes do leiloeiro (`lots`, com
+  fase, resultado, `sold` e `canCancel`) em vez de só os encerrados (`results`). `canCancel` espelha a
+  regra para a UI não duplicá-la; quem decide é o servidor.
+- **SSE `GET /lots/:id/events`**: público (o `EventSource` não envia `Authorization` e os eventos só têm
+  dados públicos). Eventos `ready`, `bid_placed`, `lot_closed`, `lot_cancelled` e `ping` (a cada 20 s,
+  com `serverNow` para recalibrar o relógio da contagem). Eventos perdidos numa queda **não** são
+  reenviados: o cliente refaz a leitura do lote e do histórico ao reconectar.
+- **`forceCloseConnections: true`** no Fastify: sem isso `app.close()` (SIGTERM no deploy) ficava
+  pendurado esperando conexões SSE que nunca terminam. Reproduzido por teste antes da correção.
+- **Busca no catálogo do museu `GET /external/artworks`** (só leiloeiro): timeout de 3 s, cache de 10 min,
+  **cooldown de 30 s** após falha (senão toda busca esperaria o timeout) e **fallback local** (as 10
+  obras reais do seed, em `src/data/fallback-artworks.json`, movido de `prisma/`) com
+  `degraded: true` e `reason` (`timeout|unavailable`). Nunca devolve 5xx por falha externa.
+
+**Achado importante, sobre a API externa**: confirmado agora com `curl` (User-Agent honesto, 26/10): a
+API do museu responde **403 com `Cf-Mitigated: challenge`** (Cloudflare Managed Challenge) **até daqui,
+de IP residencial**. Logo, a busca server-to-server deve cair no fallback local em produção, e o painel
+vai mostrar a degradação o tempo todo. O código está correto e testado (inclusive o mapeamento do
+formato real), mas **o caminho "API respondendo" nunca foi exercitado contra a API de verdade**; só
+contra respostas simuladas no formato documentado. Não contorno o desafio (nem com User-Agent de
+navegador): é uma verificação anti-bot e a decisão de projeto já era tratá-la como API instável.
+Alternativa a avaliar na Parte B: buscar direto do navegador do leiloeiro (CORS e o desafio precisam
+ser testados num navegador real; não há garantia de que funcione).
+
+**Verificação por mutação (e o que ela mostrou)**: cancelamento sem `FOR UPDATE` -> o teste
+determinístico cancelou um lote que já tinha lance (200 em vez de 409); stream sem repasse dos
+cabeçalhos CORS -> `access-control-allow-origin` some; cooldown zerado -> 3 chamadas em vez de 1.
+Os três testes falham sem o código correspondente.
