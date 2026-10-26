@@ -17,7 +17,17 @@ export type BidPlacedEvent = {
   serverNow: string;
 };
 
-export type LotEvent = BidPlacedEvent;
+export type LotClosedEvent = {
+  type: "lot_closed";
+  lotId: string;
+  // null quando o lote encerrou sem lances.
+  winnerAlias: string | null;
+  finalPriceCents: number | null;
+  closedAt: string;
+  serverNow: string;
+};
+
+export type LotEvent = BidPlacedEvent | LotClosedEvent;
 
 const emitter = new EventEmitter();
 // Uma sala com muitos espectadores gera muitos assinantes do mesmo canal.

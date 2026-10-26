@@ -36,6 +36,23 @@ export async function lockLot(tx: DbClient, lotId: string): Promise<LockedLot | 
   return z.array(lockedLotRow).parse(rows)[0] ?? null;
 }
 
+// Seleção do worker de encerramento: um lote vencido, travado, pulando os que
+// outra transação já segura (SKIP LOCKED). Assim dois workers (ou o worker e
+// o fechamento preguiçoso de uma leitura) nunca disputam o mesmo lote nem
+// esperam um pelo outro. O lock devolvido é o mesmo de lockLot: quem chama
+// segue a ordem lote -> licitante normalmente.
+export async function pickDueLot(tx: DbClient): Promise<LockedLot | null> {
+  const rows = await tx.$queryRaw`
+    SELECT id, auctioneer_id, status, starting_bid_cents, min_increment_cents,
+           starts_at, ends_at, current_bid_cents, leader_id, bid_count
+    FROM lots
+    WHERE status = 'open' AND ends_at <= clock_timestamp()
+    ORDER BY ends_at
+    LIMIT 1
+    FOR UPDATE SKIP LOCKED`;
+  return z.array(lockedLotRow).parse(rows)[0] ?? null;
+}
+
 const lockedBidderRow = z.object({
   id: z.string().uuid(),
   role: z.enum(["auctioneer", "bidder"]),
