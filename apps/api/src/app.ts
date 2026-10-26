@@ -5,6 +5,7 @@ import { auditRoutes } from "./modules/audit/routes.js";
 import { authRoutes } from "./modules/auth/routes.js";
 import { bidRoutes } from "./modules/bids/routes.js";
 import { eventRoutes } from "./modules/events/routes.js";
+import { externalRoutes } from "./modules/external/routes.js";
 import { lotRoutes } from "./modules/lots/routes.js";
 import { meRoutes } from "./modules/me/routes.js";
 import { receiptRoutes } from "./modules/receipts/routes.js";
@@ -41,6 +42,7 @@ export async function buildApp(options: BuildAppOptions = {}) {
   await app.register(auditRoutes);
   await app.register(receiptRoutes);
   await app.register(meRoutes);
+  await app.register(externalRoutes);
   await app.register(eventRoutes, { heartbeatMs: options.sseHeartbeatMs });
 
   return app;

@@ -40,7 +40,7 @@ const DAY = 24 * HOUR;
 // Dados reais do dump aberto do museu, salvos no repositório: o seed não faz
 // nenhuma chamada de rede (a API ao vivo pode estar bloqueada por Cloudflare).
 const artworks: Artwork[] = JSON.parse(
-  readFileSync(new URL("./seed-artworks.json", import.meta.url), "utf8"),
+  readFileSync(new URL("../src/data/fallback-artworks.json", import.meta.url), "utf8"),
 );
 
 function guardAgainstAccidentalReset() {
@@ -114,7 +114,7 @@ async function closeNow(lotId: string) {
 
 async function main() {
   guardAgainstAccidentalReset();
-  if (artworks.length < 10) throw new Error("seed-artworks.json must have at least 10 artworks");
+  if (artworks.length < 10) throw new Error("src/data/fallback-artworks.json must have at least 10 artworks");
   await resetDatabase();
 
   const auctioneer = await signup({ ...DEMO_ACCOUNTS.auctioneer, password: PASSWORD, role: "auctioneer" });
