@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../../lib/errors.js";
-import { loginSchema, signupSchema } from "./schemas.js";
-import { getUserById, login, signup } from "./service.js";
+import { changePasswordSchema, loginSchema, signupSchema, updateProfileSchema } from "./schemas.js";
+import { changePassword, getUserById, login, signup, updateDisplayName } from "./service.js";
 
 export async function authRoutes(app: FastifyInstance) {
   app.post("/auth/signup", async (request, reply) => {
@@ -24,5 +24,18 @@ export async function authRoutes(app: FastifyInstance) {
       throw new AppError("NOT_FOUND", "User not found");
     }
     return { user };
+  });
+
+  // Perfil: edita o nome de exibição da própria conta (o id vem do token, nunca do corpo).
+  app.patch("/auth/me", { preHandler: app.authenticate }, async (request) => {
+    const input = updateProfileSchema.parse(request.body);
+    const user = await updateDisplayName(request.user.sub, input);
+    return { user };
+  });
+
+  app.post("/auth/password", { preHandler: app.authenticate }, async (request, reply) => {
+    const input = changePasswordSchema.parse(request.body);
+    await changePassword(request.user.sub, input);
+    return reply.status(204).send();
   });
 }

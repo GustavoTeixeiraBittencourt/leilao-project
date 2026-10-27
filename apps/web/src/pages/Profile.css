@@ -1,0 +1,58 @@
+.profile { display: flex; flex-direction: column; gap: var(--space-8); padding-block: var(--space-8) var(--space-16); }
+
+/* Cabeçalho: avatar grande, nome, papel e alias. */
+.profile__header { display: flex; align-items: center; gap: var(--space-6); }
+.profile__avatar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  background: var(--color-brand-subtle);
+  border-radius: var(--radius-full);
+  color: var(--color-brand-primary);
+  font: 400 40px/46px var(--font-display);
+}
+.profile__identity { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.profile__name { overflow-wrap: anywhere; }
+.profile__chips { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin: 0; }
+.profile__role { padding: var(--space-1) var(--space-3); background: var(--color-bg-inverse); border-radius: var(--radius-full); color: var(--color-text-inverse); }
+
+.profile__header, .profile__main { width: 100%; max-width: 720px; margin-inline: auto; }
+.profile__main { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+  min-width: 0;
+}
+.card__head { display: flex; flex-direction: column; gap: var(--space-1); }
+.card__actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.card__links { display: flex; flex-direction: column; gap: var(--space-2); }
+.profile__ok { color: var(--color-success-fg); }
+.profile__link { color: var(--color-brand-primary); width: fit-content; }
+.profile__link:hover { text-decoration: underline; }
+
+/* Campos somente leitura (e-mail, alias): fundo de "desabilitado", mas selecionáveis para copiar. */
+.profile .field__input[readonly] { background: var(--color-bg-subtle); border-color: var(--color-border-default); color: var(--color-text-secondary); cursor: default; }
+
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-3); }
+.stat { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3) var(--space-4); background: var(--color-bg-subtle); border-radius: var(--radius-md); min-width: 0; overflow-wrap: anywhere; }
+.summary__error { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+
+/* Mobile: resumo em coluna; sair fica no fim. */
+@media (max-width: 767px) {
+  .profile { gap: var(--space-6); padding-block: var(--space-6) var(--space-12); }
+  .profile__header { gap: var(--space-4); }
+  .profile__avatar { width: 64px; height: 64px; font-size: 30px; line-height: 36px; }
+  .profile__name { font-size: 30px; line-height: 36px; }
+  .stats { grid-template-columns: minmax(0, 1fr); }
+  .profile__main { gap: var(--space-4); }
+  .card { padding: var(--space-4); }
+}

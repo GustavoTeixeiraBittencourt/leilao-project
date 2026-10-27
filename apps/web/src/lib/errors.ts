@@ -16,6 +16,7 @@ const MESSAGES: Record<string, string> = {
   LOT_NOT_CANCELLABLE: "Este lote não pode mais ser cancelado.",
   // Conta e acesso
   INVALID_CREDENTIALS: "E-mail ou senha incorretos.",
+  INVALID_CURRENT_PASSWORD: "A senha atual está incorreta.",
   EMAIL_ALREADY_IN_USE: "Este e-mail já está cadastrado.",
   UNAUTHORIZED: "Sua sessão expirou. Entre novamente.",
   FORBIDDEN: "Você não tem permissão para fazer isso.",

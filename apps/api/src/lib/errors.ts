@@ -2,6 +2,7 @@ export type AppErrorCode =
   | "VALIDATION_ERROR"
   | "EMAIL_ALREADY_IN_USE"
   | "INVALID_CREDENTIALS"
+  | "INVALID_CURRENT_PASSWORD"
   | "UNAUTHORIZED"
   | "FORBIDDEN"
   | "NOT_FOUND"
@@ -19,6 +20,9 @@ const STATUS_BY_CODE: Record<AppErrorCode, number> = {
   VALIDATION_ERROR: 400,
   EMAIL_ALREADY_IN_USE: 409,
   INVALID_CREDENTIALS: 401,
+  // 422 e não 401: a pessoa ESTÁ autenticada, só errou a senha atual. Um 401 aqui seria
+  // lido pelo front como sessão expirada (ver apiFetch).
+  INVALID_CURRENT_PASSWORD: 422,
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,

@@ -11,6 +11,9 @@ type AuthContextValue = {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, displayName: string, role: Role) => Promise<void>;
   logout: () => void;
+  // Troca o usuário em memória (ex.: depois de editar o nome no perfil), para o cabeçalho
+  // e o resto da app refletirem a mudança sem recarregar nem refazer login.
+  updateUser: (user: AuthUser) => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -73,7 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.clear();
   }, [queryClient]);
 
-  const value = useMemo(() => ({ user, status, login, signup, logout }), [user, status, login, signup, logout]);
+  const updateUser = useCallback((next: AuthUser) => setUser(next), []);
+
+  const value = useMemo(
+    () => ({ user, status, login, signup, logout, updateUser }),
+    [user, status, login, signup, logout, updateUser],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

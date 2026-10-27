@@ -24,6 +24,16 @@ export function fetchMe() {
   return apiFetch<{ user: AuthUser }>("/auth/me");
 }
 
+// Perfil: só o nome de exibição é editável (e-mail, papel e alias público não mudam).
+export function updateProfile(displayName: string) {
+  return apiFetch<{ user: AuthUser }>("/auth/me", { method: "PATCH", body: JSON.stringify({ displayName }) });
+}
+
+// 204 sem corpo. A senha atual errada volta como INVALID_CURRENT_PASSWORD (422, não 401).
+export function changePassword(currentPassword: string, newPassword: string) {
+  return apiFetch<null>("/auth/password", { method: "POST", body: JSON.stringify({ currentPassword, newPassword }) });
+}
+
 export function fetchHealth() {
   return apiFetch<{ status: string; serverNow: string }>("/health");
 }

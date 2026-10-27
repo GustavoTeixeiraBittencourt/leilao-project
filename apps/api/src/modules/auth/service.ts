@@ -4,7 +4,7 @@ import { prisma } from "../../db/client.js";
 import { AppError } from "../../lib/errors.js";
 import { normalizeEmail } from "../../lib/email.js";
 import { generatePublicAlias } from "../../lib/public-alias.js";
-import type { LoginInput, SignupInput } from "./schemas.js";
+import type { ChangePasswordInput, LoginInput, SignupInput, UpdateProfileInput } from "./schemas.js";
 
 const PASSWORD_HASH_ROUNDS = 10;
 const MAX_ALIAS_ATTEMPTS = 5;
@@ -88,4 +88,25 @@ export async function login(input: LoginInput): Promise<AuthenticatedUser> {
 export async function getUserById(id: string): Promise<AuthenticatedUser | null> {
   const user = await prisma.user.findUnique({ where: { id } });
   return user ? toAuthenticatedUser(user) : null;
+}
+
+// Só o nome de exibição muda. O alias público (o que a auditoria e o comprovante mostram)
+// e o papel são imutáveis, e o nome não entra no hash da cadeia de lances: editar é seguro.
+export async function updateDisplayName(userId: string, input: UpdateProfileInput): Promise<AuthenticatedUser> {
+  const user = await prisma.user.update({ where: { id: userId }, data: { displayName: input.displayName } });
+  return toAuthenticatedUser(user);
+}
+
+// Exige a senha atual (um token roubado sozinho não basta para trocar a senha).
+// Limitação conhecida: o JWT é stateless, então outras sessões já abertas continuam válidas
+// até o token expirar; trocar a senha não as derruba.
+export async function changePassword(userId: string, input: ChangePasswordInput): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new AppError("NOT_FOUND", "User not found");
+
+  const matches = await bcrypt.compare(input.currentPassword, user.passwordHash);
+  if (!matches) throw new AppError("INVALID_CURRENT_PASSWORD", "The current password is incorrect");
+
+  const passwordHash = await bcrypt.hash(input.newPassword, PASSWORD_HASH_ROUNDS);
+  await prisma.user.update({ where: { id: userId }, data: { passwordHash } });
 }
