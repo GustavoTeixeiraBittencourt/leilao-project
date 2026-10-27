@@ -1,0 +1,91 @@
+.wallet { display: flex; flex-direction: column; gap: var(--space-8); padding-block: var(--space-8) var(--space-16); }
+.wallet__title { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.wallet__balances { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-6); }
+.balance-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-6);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+}
+.balance-card--committed { background: var(--color-warning-bg); border-color: var(--color-warning-fg); color: var(--color-warning-fg); }
+.balance-card--available { background: var(--color-success-bg); border-color: var(--color-success-fg); color: var(--color-success-fg); }
+/* A descrição dentro do cartão volta ao cinza secundário; o rótulo e o valor mantêm a cor do estado. */
+.balance-card > .t-body-s { color: var(--color-text-secondary); }
+
+.wallet__columns { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: var(--space-12); align-items: start; padding-top: var(--space-6); }
+.wallet__statement { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+
+.statement__wrap { overflow-x: auto; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); border-radius: var(--radius-lg); }
+.statement__table { width: 100%; border-collapse: collapse; }
+.statement__table th { padding: var(--space-2) var(--space-4); background: var(--color-bg-subtle); text-align: left; }
+.statement__table td { padding: var(--space-3) var(--space-4); }
+.statement__table tbody tr:nth-child(even) { background: var(--color-bg-subtle); }
+.statement__num { text-align: right !important; white-space: nowrap; }
+.statement__num--in { color: var(--color-success-fg); }
+.statement__lot { white-space: nowrap; }
+.statement__link { text-decoration: underline; }
+
+.deposit {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+.deposit__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.chip {
+  min-height: 36px;
+  padding: var(--space-2) var(--space-3);
+  background: none;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+}
+.chip:hover { background: var(--color-bg-subtle); }
+.deposit__submit { width: 100%; }
+
+/* Confirmação (Figma: toast com faixa de acento). Fica no painel e não some sozinha:
+   quem usa leitor de tela, ou demora a olhar, não perde a confirmação. */
+.toast {
+  position: relative;
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  box-shadow: var(--elevation-2);
+}
+.toast::before { content: ""; position: absolute; inset: -1px auto -1px -1px; width: 4px; background: var(--color-success-fg); }
+.toast__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  background: var(--color-success-bg);
+  border-radius: var(--radius-full);
+  color: var(--color-success-fg);
+  font: 600 14px/20px var(--font-ui);
+}
+
+@media (max-width: 1199px) {
+  .wallet__columns { grid-template-columns: minmax(0, 1fr) 340px; gap: var(--space-8); }
+}
+@media (max-width: 767px) {
+  .wallet { gap: var(--space-6); padding-block: var(--space-6) var(--space-12); }
+  .wallet .t-display-l { font: 400 40px/46px var(--font-display); letter-spacing: 0; }
+  .wallet__balances { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); }
+  .balance-card { padding: var(--space-4); }
+  .wallet__columns { grid-template-columns: minmax(0, 1fr); gap: var(--space-8); padding-top: 0; }
+  /* No celular o depósito vem antes do extrato: é a ação da tela. */
+  .wallet__columns > .deposit { order: -1; }
+}
