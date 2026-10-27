@@ -1,9 +1,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { RequireRole } from "./components/RequireRole";
+import { AuctioneerDashboard } from "./pages/AuctioneerDashboard";
 import { AuditIndex } from "./pages/AuditIndex";
 import { AuditLot } from "./pages/AuditLot";
 import { LotRoom } from "./pages/LotRoom";
+import { NewLot } from "./pages/NewLot";
 import { Login } from "./pages/auth/Login";
 import { Signup } from "./pages/auth/Signup";
 import { NotFound } from "./pages/NotFound";
@@ -32,6 +34,22 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole>
             <Profile />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "/auctioneer",
+        element: (
+          <RequireRole role="auctioneer">
+            <AuctioneerDashboard />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "/auctioneer/new",
+        element: (
+          <RequireRole role="auctioneer">
+            <NewLot />
           </RequireRole>
         ),
       },

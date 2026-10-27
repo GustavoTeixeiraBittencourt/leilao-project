@@ -1,0 +1,65 @@
+.dashboard { display: flex; flex-direction: column; gap: var(--space-6); padding-block: var(--space-8) var(--space-16); }
+.dashboard__head { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.dashboard__titles { display: flex; flex-direction: column; gap: var(--space-1); }
+.dashboard__loading { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.dashboard__kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-lg);
+}
+.kpi .t-number-l { overflow-wrap: anywhere; }
+
+.dashboard__table-wrap { background: var(--color-bg-surface); border: 1px solid var(--color-border-default); border-radius: var(--radius-lg); overflow-x: auto; }
+.dashboard__table { width: 100%; border-collapse: collapse; }
+.dashboard__table th { padding: var(--space-2) var(--space-4); background: var(--color-bg-subtle); text-align: left; white-space: nowrap; }
+.dashboard__table td { padding: var(--space-3) var(--space-4); vertical-align: middle; }
+.dashboard__table tbody tr + tr td { border-top: 1px solid var(--color-border-default); }
+.dashboard__price, .my-lot__price { text-align: right !important; white-space: nowrap; }
+
+.my-lot__work { display: flex; align-items: center; gap: var(--space-3); min-width: 240px; }
+.my-lot__image { flex: none; width: 64px; height: 48px; }
+.my-lot__link:hover { text-decoration: underline; }
+.my-lot__result { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+.my-lot__actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.my-lot__actions .my-lot__link { color: var(--color-brand-primary); }
+.cancel-confirm { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.cancel-confirm__error { flex-basis: 100%; color: var(--color-danger-fg); }
+
+@media (max-width: 1199px) {
+  .dashboard__kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Mobile: cada lote vira um cartão; o rótulo de cada célula vem do data-label. */
+@media (max-width: 767px) {
+  .dashboard { gap: var(--space-4); padding-block: var(--space-6) var(--space-12); }
+  .dashboard .t-display-l { font: 400 40px/46px var(--font-display); letter-spacing: 0; }
+  .dashboard__kpis { gap: var(--space-3); }
+  .dashboard__table-wrap { background: none; border: 0; overflow: visible; }
+  .dashboard__table, .dashboard__table tbody, .dashboard__table tr, .dashboard__table td { display: block; }
+  .dashboard__table thead { display: none; }
+  .dashboard__table tr {
+    margin-bottom: var(--space-3);
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-border-default);
+    border-radius: var(--radius-lg);
+  }
+  .dashboard__table tbody tr + tr td { border-top: 0; }
+  .dashboard__table td { padding: var(--space-2) var(--space-4); }
+  .dashboard__table td[data-label]:not([data-label="Obra"])::before {
+    content: attr(data-label);
+    display: block;
+    font: 600 12px/16px var(--font-ui);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  .my-lot__work { min-width: 0; padding-top: var(--space-4) !important; }
+  .my-lot__price { text-align: left !important; }
+}
