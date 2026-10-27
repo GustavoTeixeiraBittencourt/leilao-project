@@ -52,3 +52,15 @@ export function bidsLabel(count: number): string {
 export function firstLine(text: string | null | undefined): string {
   return (text ?? "").split("\n")[0]?.trim() ?? "";
 }
+
+// "27/10 18:02:11": data curta com segundos (a auditoria mostra o horário do servidor exato).
+export function formatDateTimeSeconds(iso: string): string {
+  const date = new Date(iso);
+  return `${formatDateTime(iso)}:${pad(date.getSeconds())}`;
+}
+
+// "27/10/2026 às 20:00:12": data de emissão do comprovante.
+export function formatIssuedAt(iso: string): string {
+  const date = new Date(iso);
+  return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} às ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}

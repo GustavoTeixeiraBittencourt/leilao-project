@@ -1,0 +1,47 @@
+.receipt-stage { display: flex; justify-content: center; padding-block: var(--space-12); }
+
+.receipt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 760px;
+  padding: var(--space-12);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--elevation-1);
+}
+.receipt__top { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
+.receipt__brand { color: var(--color-brand-primary); }
+.receipt__id { display: flex; flex-direction: column; align-items: flex-end; }
+.receipt__rule { width: 100%; height: 2px; margin: 0; background: var(--color-text-primary); border: 0; }
+
+.receipt__body { display: flex; gap: var(--space-6); align-items: flex-start; }
+.receipt__image { flex: none; width: 240px; height: 300px; }
+.receipt__details { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: var(--space-4); min-width: 0; }
+.receipt__kv { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.receipt__settled {
+  padding: var(--space-1) var(--space-3);
+  background: var(--color-success-bg);
+  border-radius: var(--radius-full);
+  color: var(--color-success-fg);
+}
+
+.receipt__audit { display: flex; justify-content: space-between; padding: var(--space-2) 0; color: var(--color-brand-primary); }
+.receipt__audit:hover { text-decoration: underline; }
+.receipt__share { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+
+@media (max-width: 767px) {
+  .receipt-stage { padding-block: var(--space-6); }
+  .receipt { padding: var(--space-6) var(--space-4); gap: var(--space-4); }
+  .receipt .t-h1 { font-size: 32px; line-height: 38px; }
+  .receipt__body { flex-direction: column; }
+  .receipt__image { width: 100%; height: 260px; }
+}
+
+/* Imprimir / salvar em PDF: só o documento, sem cabeçalho, rodapé nem botões. */
+@media print {
+  .site-header, .site-footer, .tab-bar, .skip-link, .receipt__share { display: none !important; }
+  .receipt { border: 0; box-shadow: none; max-width: none; }
+}

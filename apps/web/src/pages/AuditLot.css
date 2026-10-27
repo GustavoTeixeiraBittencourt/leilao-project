@@ -1,0 +1,95 @@
+.audit { display: flex; flex-direction: column; gap: var(--space-6); padding-block: var(--space-8) var(--space-16); }
+.audit-state { padding-block: var(--space-12); }
+
+.audit__lot { display: flex; align-items: center; gap: var(--space-6); }
+.audit__image { flex: none; width: 160px; height: 120px; }
+.audit__lot-info { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.audit__title { overflow-wrap: anywhere; }
+.audit__room-link { color: var(--color-brand-primary); width: fit-content; }
+.audit__room-link:hover { text-decoration: underline; }
+
+.audit__verdict-row { display: flex; gap: var(--space-6); align-items: flex-start; padding-top: var(--space-4); }
+.audit__verdict-row > .verdict { flex: 1; min-width: 0; }
+.audit__verdict-row > .audit-seal { flex: none; width: 420px; }
+
+.verdict {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  padding: var(--space-6);
+  border: 2px solid var(--color-success-fg);
+  background: var(--color-success-bg);
+  border-radius: var(--radius-lg);
+}
+.verdict__icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--color-success-fg);
+  border-radius: var(--radius-full);
+  color: var(--color-text-on-brand);
+  font: 600 20px/26px var(--font-ui);
+}
+.verdict__text { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.verdict--tampered { border-color: var(--color-danger-fg); background: var(--color-danger-bg); }
+.verdict--tampered .verdict__icon { background: var(--color-danger-fg); }
+.verdict--inconclusive { border-color: var(--color-warning-fg); background: var(--color-warning-bg); }
+.verdict--inconclusive .verdict__icon { background: var(--color-warning-fg); }
+
+.audit__facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-8); padding-top: var(--space-2); }
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+.fact--alert { border-color: var(--color-danger-fg); }
+.fact--alert > .t-label-m { color: var(--color-danger-fg); }
+
+.audit__table-block { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-4); }
+.audit-table__wrap { overflow-x: auto; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); border-radius: var(--radius-lg); }
+.audit-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+.audit-table th { padding: var(--space-2) var(--space-4); background: var(--color-bg-subtle); text-align: left; white-space: nowrap; }
+.audit-table td { padding: var(--space-3) var(--space-4); }
+.audit-table tbody tr:nth-child(even) { background: var(--color-bg-subtle); }
+.audit-table__num { text-align: right !important; white-space: nowrap; }
+.audit-table__hash { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+
+/* O estado nunca depende só da cor: cada linha tem símbolo + texto (✓ / × / !). */
+.audit-table tbody tr.audit-row--break { background: var(--color-danger-bg); }
+.audit-table tbody tr.audit-row--untrusted { background: var(--color-warning-bg); }
+.audit-status--ok { color: var(--color-success-fg); }
+.audit-status--break { color: var(--color-danger-fg); }
+.audit-status--untrusted { color: var(--color-warning-fg); }
+.audit-status { white-space: nowrap; }
+
+.audit__howto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 1199px) {
+  .audit__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .audit__verdict-row { flex-direction: column; }
+  .audit__verdict-row > .audit-seal { width: 100%; }
+  .audit__verdict-row > .verdict { width: 100%; }
+}
+@media (max-width: 767px) {
+  .audit { gap: var(--space-4); padding-block: var(--space-6) var(--space-12); }
+  .audit__lot { flex-direction: column; align-items: stretch; }
+  .audit__image { width: 100%; height: 200px; }
+  .audit .t-display-l { font: 400 40px/46px var(--font-display); letter-spacing: 0; }
+  .verdict { padding: var(--space-4); }
+}
