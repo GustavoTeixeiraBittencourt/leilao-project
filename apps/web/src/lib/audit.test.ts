@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AuditResult } from "../api/audit";
-import { breakPointLabel, receiptNumber, rowStatus, sealTail, shortHash, verdictMessage, verifiedCount } from "./audit";
+import { breakPointLabel, receiptNumber, receiptUrl, rowStatus, sealTail, shortHash, verdictMessage, verifiedCount } from "./audit";
 
 function audit(overrides: Partial<AuditResult> = {}): AuditResult {
   const bids = [1, 2, 3, 4, 5].map((seq) => ({
@@ -143,6 +143,11 @@ describe("display helpers", () => {
   it("shows the tail of the seal", () => {
     expect(sealTail("abcdef1234567890c91e")).toBe("…c91e");
     expect(sealTail(null)).toBe("—");
+  });
+
+  it("builds the public receipt link without doubling slashes", () => {
+    expect(receiptUrl("https://acervo.example", "tok123")).toBe("https://acervo.example/r/tok123");
+    expect(receiptUrl("https://acervo.example/", "tok123")).toBe("https://acervo.example/r/tok123");
   });
 
   it("derives a receipt number from the token", () => {

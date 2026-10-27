@@ -11,6 +11,7 @@ import { Profile } from "./pages/Profile";
 import { ReceiptPage } from "./pages/ReceiptPage";
 import { Vitrine } from "./pages/Vitrine";
 import { Wallet } from "./pages/Wallet";
+import { Wins } from "./pages/Wins";
 
 // Todas as telas moram dentro do Layout (cabeçalho, rodapé, abas do mobile).
 // As rotas de cada papel entram aqui conforme as telas são construídas.
@@ -31,6 +32,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole>
             <Profile />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "/wins",
+        element: (
+          <RequireRole role="bidder">
+            <Wins />
           </RequireRole>
         ),
       },

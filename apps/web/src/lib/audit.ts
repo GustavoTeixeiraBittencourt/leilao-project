@@ -100,3 +100,9 @@ export function sealTail(hash: string | null | undefined): string {
 export function receiptNumber(token: string): string {
   return `REC-${token.slice(0, 8).toUpperCase()}`;
 }
+
+// Link público e compartilhável do comprovante. A origem vem de quem chama (o navegador),
+// para o mesmo código servir em localhost e no deploy.
+export function receiptUrl(origin: string, token: string): string {
+  return `${origin.replace(/\/+$/, "")}/r/${token}`;
+}
