@@ -188,7 +188,7 @@ export function Wallet() {
   return (
     <div className="container wallet">
       <header className="wallet__title">
-        <p className="t-overline text-secondary">Sua conta · saldo simulado</p>
+        <p className="t-overline text-secondary">Sua conta</p>
         <h1 className="t-display-l">Carteira</h1>
       </header>
 
@@ -205,10 +205,6 @@ export function Wallet() {
       ) : (
         <>
           <Balances wallet={query.data} />
-          <p className="t-body-m text-secondary">
-            Disponível = total − comprometido. O valor comprometido é a soma dos seus lances que estão liderando lotes
-            ao vivo; ele não pode ser usado em novos lances e volta ao disponível assim que você é superado.
-          </p>
           <div className="wallet__columns">
             <Statement wallet={query.data} />
             {isBidder ? (

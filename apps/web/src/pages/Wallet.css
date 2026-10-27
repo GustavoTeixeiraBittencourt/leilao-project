@@ -17,7 +17,7 @@
 /* A descrição dentro do cartão volta ao cinza secundário; o rótulo e o valor mantêm a cor do estado. */
 .balance-card > .t-body-s { color: var(--color-text-secondary); }
 
-.wallet__columns { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: var(--space-12); align-items: start; padding-top: var(--space-6); }
+.wallet__columns { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: var(--space-12); align-items: start; }
 .wallet__statement { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 
 .statement__wrap { overflow-x: auto; background: var(--color-bg-surface); border: 1px solid var(--color-border-default); border-radius: var(--radius-lg); }
@@ -41,7 +41,7 @@
 }
 .deposit__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .chip {
-  min-height: 36px;
+  min-height: 44px;
   padding: var(--space-2) var(--space-3);
   background: none;
   border: 1px solid var(--color-border-strong);

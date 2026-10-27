@@ -16,3 +16,5 @@
   .audit-lot { flex-wrap: wrap; }
   .audit-lot__go { display: none; }
 }
+
+.audit-index__section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }

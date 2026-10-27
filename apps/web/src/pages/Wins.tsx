@@ -59,7 +59,6 @@ export function Wins() {
   return (
     <div className="container wins">
       <header className="wins__title">
-        <p className="t-overline text-secondary">Lotes vencidos</p>
         <h1 className="t-display-l">Meus arremates</h1>
       </header>
       <p className="t-body-m text-secondary">

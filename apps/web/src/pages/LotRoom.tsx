@@ -13,8 +13,9 @@ import { useNow } from "../hooks/useNow";
 import { formatCountdown, remainingMs, serverNowMs } from "../lib/clock";
 import { describeError } from "../lib/errors";
 import { bidsLabel, firstLine, formatDayAt, formatMoney, lotCode } from "../lib/format";
+import { artworkFacts } from "../lib/lots";
 import { needsPhaseRefresh, remainingAnnouncement, standingOf } from "../lib/room";
-import { Button } from "../ui/Button";
+import { Button, ButtonLink } from "../ui/Button";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
 import "./LotRoom.css";
 
@@ -63,29 +64,24 @@ function Countdown({ lot, extended }: { lot: Lot; extended: boolean }) {
   );
 }
 
-const ATTRIBUTE_ROWS: { label: string; read: (lot: Lot) => string }[] = [
-  { label: "Data", read: (lot) => lot.attributes.date_display ?? "" },
-  { label: "Técnica", read: (lot) => lot.attributes.medium_display ?? "" },
-  { label: "Dimensões", read: (lot) => lot.attributes.dimensions ?? "" },
-  { label: "Crédito", read: (lot) => lot.attributes.credit_line ?? "" },
-  {
-    label: "Domínio público",
-    read: (lot) => (lot.attributes.is_public_domain === undefined ? "" : lot.attributes.is_public_domain ? "Sim" : "Não"),
-  },
-];
-
-function Attributes({ lot }: { lot: Lot }) {
-  const rows = ATTRIBUTE_ROWS.map((row) => ({ label: row.label, text: row.read(lot).trim() })).filter((row) => row.text);
-  if (rows.length === 0) return null;
+// Ficha da obra: o snapshot do museu guardado no lote (ver `artworkFacts`). Sem nenhum dado, a seção some.
+function ArtworkSheet({ lot }: { lot: Lot }) {
+  const facts = artworkFacts(lot);
+  if (facts.length === 0) return null;
   return (
-    <dl className="attributes">
-      {rows.map((row) => (
-        <div key={row.label} className="attributes__row">
-          <dt className="t-label-m text-secondary">{row.label}</dt>
-          <dd className="t-body-m">{row.text}</dd>
-        </div>
-      ))}
-    </dl>
+    <section className="sheet" aria-labelledby="sheet-title">
+      <h2 id="sheet-title" className="t-h2">
+        Ficha da obra
+      </h2>
+      <dl className="attributes">
+        {facts.map((fact) => (
+          <div key={fact.label} className="attributes__row">
+            <dt className="t-label-m text-secondary">{fact.label}</dt>
+            <dd className="t-body-m">{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 
@@ -174,13 +170,6 @@ function BidHistory({
           {showAll ? "Mostrar só os mais recentes" : `Mostrar todos os ${ordered.length} lances`}
         </Button>
       )}
-
-      <p className="t-body-s history__note">
-        Cada lance entra no histórico com horário do servidor. Qualquer pessoa pode verificar a integridade em{" "}
-        <Link to={`/audit/${lot.id}`} className="history__link">
-          Auditoria pública →
-        </Link>
-      </p>
     </section>
   );
 }
@@ -274,11 +263,10 @@ export function LotRoom() {
     <div className="container room">
       <PhaseWatcher lot={lot} refetch={() => void lotQuery.refetch()} fetching={lotQuery.isFetching} />
 
-      <nav className="room__crumbs t-body-s" aria-label="Você está em">
-        <Link to="/" className="room__back t-label-m">
+      <nav className="room__crumbs t-body-m" aria-label="Você está em">
+        <Link to="/" className="room__back">
           ← Vitrine
         </Link>
-        <span className="text-secondary">/ Lote {lot.phase === "live" ? "ao vivo" : lot.phase === "scheduled" ? "agendado" : lot.phase === "ended" ? "encerrado" : "cancelado"}</span>
       </nav>
 
       <div className="room__main">
@@ -290,12 +278,7 @@ export function LotRoom() {
           {artist && <p className="t-body-l text-secondary">{artist}</p>}
         </header>
 
-        <p className="t-body-m">
-          Dados da obra salvos no lote no momento da publicação: continuam visíveis mesmo se a API do acervo estiver
-          indisponível.
-        </p>
-
-        <Attributes lot={lot} />
+        <ArtworkSheet lot={lot} />
 
         <BidHistory lot={lot} bids={bids} myAlias={user?.publicAlias ?? null} status={streamStatus} loading={bidsQuery.isPending} />
       </div>
@@ -327,10 +310,10 @@ export function LotRoom() {
           </p>
         </div>
 
-        <Link to={`/audit/${lot.id}`} className="room__audit t-label-m">
-          <span>Auditoria pública deste lote</span>
-          <span aria-hidden="true">→</span>
-        </Link>
+        {/* Único acesso à auditoria nesta tela (o histórico não repete o link). */}
+        <ButtonLink to={`/audit/${lot.id}`} variant="secondary" className="room__audit">
+          Auditoria pública deste lote →
+        </ButtonLink>
       </aside>
 
       {/* Barra fixa do mobile (Figma: Bid Bar): lance atual + atalho para a folha. */}

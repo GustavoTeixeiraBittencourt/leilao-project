@@ -12,7 +12,7 @@
 }
 
 .btn--md { min-height: 44px; padding: 0 var(--space-6); } /* alvo de toque >= 44px */
-.btn--sm { min-height: 36px; padding: 0 var(--space-4); }
+.btn--sm { min-height: 44px; padding: 0 var(--space-4); }
 
 /* Hover: escurece um passo (primary -> primary-hover); secundários ganham bg-subtle.
    Pressionado: mesmo token do hover + 1px para baixo. */

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { Lot } from "../api/lots";
-import { pickFeatured, sortLots } from "./lots";
+import { artworkFacts, pickFeatured, sortLots } from "./lots";
 
 function lot(overrides: Partial<Lot> & { id: string }): Lot {
   return {
     title: overrides.id,
-    imageUrl: "https://www.artic.edu/iiif/2/x/full/843,/0/default.jpg",
+    imageUrl: "https://openaccess-cdn.clevelandart.org/2001.19/2001.19_web.jpg",
     attributes: {},
     startingBidCents: 10_000,
     minIncrementCents: 1_000,
@@ -74,5 +74,46 @@ describe("pickFeatured", () => {
 
   it("falls back to a lot without image when none has one", () => {
     expect(pickFeatured([lot({ id: "only", imageUrl: null })])?.id).toBe("only");
+  });
+});
+
+describe("artworkFacts", () => {
+  const full = {
+    artist_display: "Georges Seurat\nFrench, 1859–1891",
+    date_display: "1884–86",
+    medium_display: "Oil on canvas",
+    dimensions: "207.5 × 308.1 cm",
+    credit_line: "Helen Birch Bartlett Memorial Collection",
+    main_reference_number: "1926.224",
+    is_public_domain: true,
+  };
+
+  it("lists the museum snapshot in datasheet order", () => {
+    expect(artworkFacts({ attributes: full }).map((fact) => fact.label)).toEqual([
+      "Artista",
+      "Data",
+      "Técnica",
+      "Dimensões",
+      "Crédito",
+      "Referência no acervo",
+      "Domínio público",
+    ]);
+  });
+
+  it("keeps the full artist text (nationality and years), not just the first line", () => {
+    expect(artworkFacts({ attributes: full })[0]?.value).toBe("Georges Seurat\nFrench, 1859–1891");
+  });
+
+  it("omits rows the museum left empty or null", () => {
+    const facts = artworkFacts({ attributes: { artist_display: "Seurat", date_display: null, medium_display: "  ", is_public_domain: false } });
+    expect(facts).toEqual([
+      { label: "Artista", value: "Seurat" },
+      { label: "Domínio público", value: "Não" },
+    ]);
+  });
+
+  it("says Sim / Não for public domain and omits it when unknown", () => {
+    expect(artworkFacts({ attributes: { is_public_domain: true } })).toEqual([{ label: "Domínio público", value: "Sim" }]);
+    expect(artworkFacts({ attributes: {} })).toEqual([]);
   });
 });

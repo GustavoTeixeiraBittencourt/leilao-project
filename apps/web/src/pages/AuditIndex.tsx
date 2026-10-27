@@ -1,13 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchLots, lotsQueryKey, type ListedPhase, type Lot } from "../api/lots";
 import { describeError } from "../lib/errors";
 import { bidsLabel, formatDayAt, formatMoney, lotCode } from "../lib/format";
+import { Button } from "../ui/Button";
 import { StatusBadge } from "../ui/StatusBadge";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
 import "./AuditIndex.css";
 
+// A API não tem offset: busca até o teto (50) e a lista revela de 5 em 5 no cliente.
 const LIMIT = 50;
+const PAGE_SIZE = 5;
 
 function LotRow({ lot }: { lot: Lot }) {
   const price = lot.finalPriceCents ?? lot.currentBidCents;
@@ -34,12 +38,20 @@ function LotRow({ lot }: { lot: Lot }) {
 
 function Section({ phase, title }: { phase: ListedPhase; title: string }) {
   const query = useQuery({ queryKey: lotsQueryKey(phase, "", LIMIT), queryFn: () => fetchLots({ phase, limit: LIMIT }) });
+  const [visible, setVisible] = useState(PAGE_SIZE);
 
   return (
     <section className="audit-index__section" aria-labelledby={`audit-${phase}`}>
-      <h2 id={`audit-${phase}`} className="t-h2">
-        {title}
-      </h2>
+      <div className="audit-index__section-head">
+        <h2 id={`audit-${phase}`} className="t-h2">
+          {title}
+        </h2>
+        {query.data && visible < query.data.lots.length && (
+          <Button variant="secondary" size="sm" onClick={() => setVisible((current) => current + PAGE_SIZE)}>
+            Ver mais
+          </Button>
+        )}
+      </div>
       {query.isPending ? (
         <Skeleton style={{ height: 96 }} />
       ) : query.isError ? (
@@ -50,7 +62,7 @@ function Section({ phase, title }: { phase: ListedPhase; title: string }) {
         <EmptyState title="Nenhum lote por aqui" />
       ) : (
         <ul className="audit-index__list">
-          {query.data.lots.map((lot) => (
+          {query.data.lots.slice(0, visible).map((lot) => (
             <LotRow key={lot.id} lot={lot} />
           ))}
         </ul>
@@ -65,15 +77,14 @@ export function AuditIndex() {
   return (
     <div className="container audit-index">
       <header className="audit-index__head">
-        <p className="t-overline text-secondary">Sem login · qualquer pessoa pode conferir</p>
         <h1 className="t-display-l">Auditoria pública</h1>
         <p className="t-body-l text-secondary">
           Cada lance carrega uma impressão digital que depende do anterior. Escolha um lote para recalcular a cadeia
           inteira e ver se o histórico foi alterado.
         </p>
       </header>
-      <Section phase="ended" title="Encerrados" />
       <Section phase="live" title="Ao vivo" />
+      <Section phase="ended" title="Encerrados" />
     </div>
   );
 }

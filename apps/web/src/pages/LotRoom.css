@@ -10,8 +10,8 @@
 }
 .room-state { padding-block: var(--space-12); }
 
-.room__crumbs { grid-area: crumbs; display: flex; gap: var(--space-2); padding-top: var(--space-2); }
-.room__back { color: var(--color-brand-primary); }
+.room__crumbs { grid-area: crumbs; display: flex; align-items: center; gap: var(--space-2); min-height: 44px; padding-top: var(--space-2); }
+.room__back { color: var(--color-brand-primary); font-weight: 600; }
 
 .room__main { grid-area: main; display: flex; flex-direction: column; gap: var(--space-8); min-width: 0; }
 .room__image { height: 520px; }
@@ -50,15 +50,11 @@
   background: var(--color-bg-subtle);
   border-radius: var(--radius-md);
 }
-.room__audit {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-2) 0;
-  color: var(--color-brand-primary);
-}
-.room__audit:hover { text-decoration: underline; }
+/* Botão único de auditoria: largura total da coluna lateral. */
+.room__audit { width: 100%; }
 
-/* Atributos (Figma: tabela zebrada, rótulo de 160px). */
+/* Ficha da obra: título + tabela zebrada (Figma: rótulo de 160px). */
+.sheet { display: flex; flex-direction: column; gap: var(--space-3); }
 .attributes {
   margin: 0;
   background: var(--color-bg-surface);
@@ -69,7 +65,8 @@
 .attributes__row { display: flex; gap: var(--space-4); padding: var(--space-3) var(--space-4); }
 .attributes__row:nth-child(even) { background: var(--color-bg-subtle); }
 .attributes dt { flex: 0 0 160px; }
-.attributes dd { margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+/* pre-line: o artista vem do museu em duas linhas ("Nome" / "nacionalidade, anos"). */
+.attributes dd { margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; white-space: pre-line; }
 
 /* Histórico */
 .history { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); width: 100%; }
@@ -87,8 +84,6 @@
 .history__seq { width: 40px; }
 .history__num { text-align: right !important; white-space: nowrap; }
 .history__row--leader { background: var(--color-success-bg); }
-.history__note { color: var(--color-brand-primary); }
-.history__link { text-decoration: underline; }
 
 @media (max-width: 1199px) {
   .room { grid-template-columns: minmax(0, 1fr) 360px; column-gap: var(--space-8); }
