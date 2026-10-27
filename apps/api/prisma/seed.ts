@@ -16,7 +16,7 @@ import { settleLot } from "../src/modules/settlement/service.js";
 type Artwork = {
   id: number;
   title: string;
-  image_id: string;
+  image_url: string;
   is_public_domain: boolean;
   artist_display: string;
   date_display: string;
@@ -37,8 +37,8 @@ const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 
-// Dados reais do dump aberto do museu, salvos no repositório: o seed não faz
-// nenhuma chamada de rede (a API ao vivo pode estar bloqueada por Cloudflare).
+// Dados reais da API aberta do Cleveland Museum of Art (CC0), salvos no
+// repositório: o seed não faz nenhuma chamada de rede.
 const artworks: Artwork[] = JSON.parse(
   readFileSync(new URL("../src/data/fallback-artworks.json", import.meta.url), "utf8"),
 );
@@ -67,10 +67,10 @@ async function createLot(
   return prisma.lot.create({
     data: {
       auctioneerId,
-      externalSource: "artic",
+      externalSource: "cleveland",
       externalId: String(artwork.id),
       title: artwork.title,
-      imageUrl: `https://www.artic.edu/iiif/2/${artwork.image_id}/full/843,/0/default.jpg`,
+      imageUrl: artwork.image_url,
       // Snapshot imutável: a API externa nunca é consultada de novo.
       attributes: {
         artist_display: artwork.artist_display,

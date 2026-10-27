@@ -171,9 +171,9 @@ function Footer() {
         <p className="t-h2">ACERVO</p>
         <p className="t-body-s">
           Os dados dos lotes são salvos no sistema: a vitrine, as salas e a auditoria continuam funcionando mesmo se a
-          API do Art Institute of Chicago estiver fora do ar. Imagens carregadas diretamente do acervo (IIIF).
+          API do Cleveland Museum of Art estiver fora do ar. Imagens carregadas diretamente do acervo do museu.
         </p>
-        <p className="t-caption">Obras do acervo do Art Institute of Chicago. Saldos, valores e lances são simulados.</p>
+        <p className="t-caption">Obras do acervo aberto (CC0) do Cleveland Museum of Art. Saldos, valores e lances são simulados.</p>
       </div>
     </footer>
   );

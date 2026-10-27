@@ -21,7 +21,7 @@ describe("lots", () => {
     return {
       externalId: "27992",
       title: "A Sunday on La Grande Jatte",
-      imageUrl: "https://www.artic.edu/iiif/2/abc/full/843,/0/default.jpg",
+      imageUrl: "https://openaccess-cdn.clevelandart.org/2001.19/2001.19_web.jpg",
       attributes: { artist_display: "Georges Seurat", date_display: "1884-86" },
       startingBidCents: 100_000,
       minIncrementCents: 5_000,

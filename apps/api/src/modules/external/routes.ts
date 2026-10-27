@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
-import { searchArtworks } from "./artic.js";
+import { searchArtworks } from "./cleveland.js";
 
 const searchQuerySchema = z.object({
   q: z.string().trim().min(2).max(100),

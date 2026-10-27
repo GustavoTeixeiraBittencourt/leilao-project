@@ -1,27 +1,27 @@
 import { z } from "zod";
 import fallbackData from "../../data/fallback-artworks.json" with { type: "json" };
 
-// Busca de obras na API pública do Art Institute of Chicago. Essa API é tratada
-// como INSTÁVEL (exigência do desafio): só o painel do leiloeiro a usa, com
-// timeout curto, tratamento de qualquer falha e degradação. Nunca lança erro
+// Busca de obras na API aberta do Cleveland Museum of Art (CC0). Essa API é
+// tratada como INSTÁVEL (exigência do desafio): só o painel do leiloeiro a usa,
+// com timeout curto, tratamento de qualquer falha e degradação. Nunca lança erro
 // para a rota: o pior caso é uma resposta `degraded` (com o fallback local).
 //
-// Risco real: a API fica atrás de um Cloudflare Managed Challenge que bloqueia
-// IPs de datacenter (ver CLAUDE.md seção 6), então a partir do Render ela pode
-// responder 403. Por isso o fallback local (10 obras reais) existe.
+// Por que não o Art Institute of Chicago: a API e o IIIF dele ficam atrás de um
+// Cloudflare Managed Challenge (403 para clientes sem navegador, e <img> não
+// resolve o desafio), então as imagens não carregavam. Ver DECISIONS.md.
 
-const ARTIC_SEARCH_URL = "https://api.artic.edu/api/v1/artworks/search";
+const SEARCH_URL = "https://openaccess-api.clevelandart.org/api/artworks/";
 const FIELDS = [
   "id",
   "title",
-  "image_id",
-  "is_public_domain",
-  "artist_display",
-  "date_display",
-  "medium_display",
-  "dimensions",
-  "credit_line",
-  "main_reference_number",
+  "creators",
+  "creation_date",
+  "technique",
+  "measurements",
+  "creditline",
+  "accession_number",
+  "share_license_status",
+  "images",
 ].join(",");
 
 export const SEARCH_TIMEOUT_MS = 3_000;
@@ -57,18 +57,19 @@ export type ArtworkItem = {
 
 export type SearchResult = {
   items: ArtworkItem[];
-  source: "artic" | "local";
+  source: "cleveland" | "local";
   degraded: boolean;
   reason: SearchReason | null;
 };
 
 const nullableText = z.string().nullish().transform((value) => value ?? null);
 
-const rawArtworkSchema = z.object({
+// Formato normalizado (o mesmo de data/fallback-artworks.json e do seed).
+const artworkSchema = z.object({
   id: z.number().int(),
   title: z.string().min(1),
-  image_id: z.string().min(1), // sem imagem não há lote que se possa exibir
-  is_public_domain: z.boolean().nullish().transform((value) => value ?? false),
+  image_url: z.string().url(), // sem imagem não há lote que se possa exibir
+  is_public_domain: z.boolean(),
   artist_display: nullableText,
   date_display: nullableText,
   medium_display: nullableText,
@@ -76,16 +77,44 @@ const rawArtworkSchema = z.object({
   credit_line: nullableText,
   main_reference_number: nullableText,
 });
-type RawArtwork = z.infer<typeof rawArtworkSchema>;
+type RawArtwork = z.infer<typeof artworkSchema>;
 
-// URL IIIF carregada pelo BROWSER do usuário (nunca proxeada pelo backend).
-export const iiifUrl = (imageId: string) => `https://www.artic.edu/iiif/2/${imageId}/full/843,/0/default.jpg`;
+// Formato cru da API do Cleveland -> formato normalizado. Campos opcionais
+// ausentes viram null; falta de imagem ou título faz o registro ser descartado.
+const clevelandSchema = z
+  .object({
+    id: z.number().int(),
+    title: z.string().min(1),
+    images: z.object({ web: z.object({ url: z.string().url() }) }),
+    creators: z.array(z.object({ description: z.string().nullish() })).nullish(),
+    creation_date: nullableText,
+    technique: nullableText,
+    measurements: nullableText,
+    creditline: nullableText,
+    accession_number: nullableText,
+    share_license_status: nullableText,
+  })
+  .transform(
+    (raw): RawArtwork => ({
+      id: raw.id,
+      title: raw.title,
+      // Imagem carregada pelo BROWSER do usuário (nunca proxeada pelo backend).
+      image_url: raw.images.web.url,
+      is_public_domain: raw.share_license_status === "CC0",
+      artist_display: (raw.creators ?? []).map((c) => c.description).filter(Boolean).join("; ") || null,
+      date_display: raw.creation_date,
+      medium_display: raw.technique,
+      dimensions: raw.measurements,
+      credit_line: raw.creditline,
+      main_reference_number: raw.accession_number,
+    }),
+  );
 
 function toItem(raw: RawArtwork): ArtworkItem {
   return {
     externalId: String(raw.id),
     title: raw.title,
-    imageUrl: iiifUrl(raw.image_id),
+    imageUrl: raw.image_url,
     artistDisplay: raw.artist_display,
     dateDisplay: raw.date_display,
     mediumDisplay: raw.medium_display,
@@ -104,15 +133,15 @@ function toItem(raw: RawArtwork): ArtworkItem {
 
 // Tolerante: um registro fora do formato (ou sem imagem) é descartado, sem
 // derrubar a lista inteira.
-function parseItems(rows: unknown): ArtworkItem[] {
+function parseItems(rows: unknown, schema: z.ZodType<RawArtwork, z.ZodTypeDef, unknown>): ArtworkItem[] {
   if (!Array.isArray(rows)) return [];
   return rows.flatMap((row) => {
-    const parsed = rawArtworkSchema.safeParse(row);
+    const parsed = schema.safeParse(row);
     return parsed.success ? [toItem(parsed.data)] : [];
   });
 }
 
-const localArtworks = parseItems(fallbackData);
+const localArtworks = parseItems(fallbackData, artworkSchema);
 
 function searchLocal(q: string, limit: number): ArtworkItem[] {
   const needle = q.toLowerCase();
@@ -144,13 +173,14 @@ export async function searchArtworks(
 
   const hit = cache.get(key);
   if (hit && now - hit.at < CACHE_TTL_MS) {
-    return { items: hit.items, source: "artic", degraded: false, reason: null };
+    return { items: hit.items, source: "cleveland", degraded: false, reason: null };
   }
   if (cooldown && now < cooldown.until) return degrade(q, limit, cooldown.reason);
 
-  const url = new URL(ARTIC_SEARCH_URL);
+  const url = new URL(SEARCH_URL);
   url.searchParams.set("q", q);
-  url.searchParams.set("limit", String(limit * 3)); // folga: itens sem imagem são descartados
+  url.searchParams.set("limit", String(limit * 3)); // folga: itens inválidos são descartados
+  url.searchParams.set("has_image", "1");
   url.searchParams.set("fields", FIELDS);
 
   try {
@@ -158,15 +188,15 @@ export async function searchArtworks(
       signal: AbortSignal.timeout(options.timeoutMs ?? SEARCH_TIMEOUT_MS),
       headers: { accept: "application/json", "user-agent": "leilao-online/1.0 (technical assessment)" },
     });
-    if (!response.ok) throw new Error(`ARTIC responded ${response.status}`);
+    if (!response.ok) throw new Error(`Cleveland API responded ${response.status}`);
     const body: unknown = await response.json();
     const rows = typeof body === "object" && body !== null ? (body as { data?: unknown }).data : undefined;
-    const items = parseItems(rows).slice(0, limit);
+    const items = parseItems(rows, clevelandSchema).slice(0, limit);
 
     if (cache.size >= CACHE_MAX_ENTRIES) cache.delete(cache.keys().next().value as string);
     cache.set(key, { at: now, items });
     cooldown = null;
-    return { items, source: "artic", degraded: false, reason: null };
+    return { items, source: "cleveland", degraded: false, reason: null };
   } catch (error) {
     const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
     const reason: SearchReason = timedOut ? "timeout" : "unavailable";

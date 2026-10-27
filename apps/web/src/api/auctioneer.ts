@@ -42,7 +42,7 @@ export type Artwork = {
 
 export type ArtworkSearch = {
   items: Artwork[];
-  source: "artic" | "local";
+  source: "cleveland" | "local";
   // true quando o museu não respondeu e a lista veio do acervo local de reserva.
   degraded: boolean;
   reason: "timeout" | "unavailable" | null;
