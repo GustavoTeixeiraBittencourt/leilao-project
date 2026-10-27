@@ -297,3 +297,151 @@ ser testados num navegador real; não há garantia de que funcione).
 determinístico cancelou um lote que já tinha lance (200 em vez de 409); stream sem repasse dos
 cabeçalhos CORS -> `access-control-allow-origin` some; cooldown zerado -> 3 chamadas em vez de 1.
 Os três testes falham sem o código correspondente.
+
+---
+
+## 2026-10-27 — Etapa 4, Parte B: telas do front
+
+Implementadas a partir dos frames do Figma (via servidor MCP, só leitura): Sala do lote, Carteira,
+Auditoria pública, Comprovante, Meus arremates e Painel do leiloeiro (Meus lotes + Novo lote). Nenhuma
+mudança de API foi necessária: o contrato da Parte A bastou. Onde o design e o servidor divergem, **o
+servidor vence** e o desvio está listado abaixo.
+
+**Arquitetura do front**:
+- **Cache como fonte única da sala.** O SSE (`useLotStream`) escreve direto no cache do React Query;
+  a tela só lê dele. Não existe um segundo estado para ficar fora de sincronia. A resposta do `POST`
+  de lance e o evento SSE do mesmo lance chegam em qualquer ordem: `applyBidPlaced` só aceita
+  `bidCount` maior que o atual e `mergeBid` deduplica por `seq`.
+- **Reconexão do SSE = reler tudo.** O servidor não reenvia o que se perdeu numa queda, então a cada
+  evento `ready` (1ª conexão e toda reconexão do `EventSource`) o lote e o histórico são relidos. Cobre
+  também a janela entre a leitura inicial e a abertura do stream.
+- **O cliente nunca decide a fase.** Contagem regressiva usa o offset do relógio do servidor
+  (`syncServerClock`, recalibrado por toda resposta HTTP e por todo evento SSE). Quando o horário
+  indica que o lote abriu ou encerrou, `PhaseWatcher` só *pergunta de novo* ao servidor (no máximo a
+  cada 2 s, nunca com outra leitura em andamento).
+- **Dinheiro em centavos inteiros, convertido a partir do texto** (`lib/money.ts`), nunca por
+  `parseFloat`. "12.950" sem vírgula é 12 mil e 950 (padrão brasileiro). Teto de 1e11 centavos nos
+  lances e de 1e8 no depósito, iguais aos da API.
+- **Acessibilidade da contagem**: texto para leitor de tela muda só quando a faixa de tempo muda
+  (`remainingAnnouncement`), não a cada segundo (regra do Figma: aria-live em intervalos).
+- **Estado nunca só por cor**: badges, linhas de auditoria e selo usam símbolo + texto (✓ × ! ?).
+- **Testes do front só de lógica pura** (Vitest em Node, sem DOM): reducers do SSE, dinheiro, regras da
+  auditoria, formulário de lote. Sem testes de componente.
+
+**Auditoria: dois tipos de quebra.** O servidor devolve um `firstBreak.seq` e um motivo. Nas quebras
+*da cadeia* (`SEQ_GAP`, `PREV_HASH_MISMATCH`, `HASH_MISMATCH`) os lances anteriores conferem, o lance
+`seq` é o ponto de quebra e os seguintes ficam "não confiáveis". Nas quebras *fora da cadeia*
+(contagem, resumo do lote, selo, comprovante) os elos se recalculam normalmente e o que não bate é o
+que está gravado ao lado: as linhas ficam "✓ confere" e o painel **nomeia a causa** em vez de acusar um
+lance inocente. **Falha ao consultar a auditoria (rede, 5xx) aparece como "Verificação inconclusiva"**
+e o texto diz que isso não indica adulteração. Em lote aberto o painel diz que o selo final só existe
+depois do encerramento (o limite conhecido da seção 5 do CLAUDE.md, dito na tela).
+
+**O selo do comprovante só fica verde depois da auditoria.** `/r/:token` busca o comprovante e, em
+seguida, a auditoria do lote; o selo é "pendente" enquanto carrega e "não verificado" se a auditoria
+falhar (neutro, nunca verde nem vermelho). Só `verdict === "intact" && sealed` vira "verificado".
+
+**Desvios do Figma (todos deliberados)**:
+- **Depósito**: o Figma diz "mínimo US$ 10, máximo US$ 50.000"; a API aceita de 1 centavo a
+  US$ 1.000.000. A tela mostra e valida o limite real.
+- **Sala do lote**: sem miniaturas da galeria (existe uma imagem por lote); o overline é só
+  "Lote nº …" (o snapshot não traz categoria como "Pintura").
+- **Artista** ausente na Auditoria, nos Arremates e no Comprovante: o endpoint não devolve os
+  atributos do lote. Evitei mudar a API só para isso.
+- **Coluna "Lote" da Carteira**: o extrato traz o `lotId`, não o título; mostro "Lote nº …" como link.
+- **Meus arremates**: sem o estado "Liquidação em andamento". `/me/wins` só lista lotes com
+  comprovante e a liquidação é uma única transação, então "arrematado sem comprovante" não existe.
+  O texto é "Liquidado em" (data do comprovante), não "Encerrado em".
+- **Comprovante nº**: derivado do início do token público (`REC-XXXXXXXX`); não há número sequencial.
+- **Rodapé "Protótipo: hashes são exemplos"** removido (só valia para o design).
+
+**Painel do leiloeiro**:
+- **Cancelar tem confirmação em duas etapas na própria linha** (cancelar é irreversível). O botão só
+  aparece quando `canCancel` é verdadeiro, mas quem decide é o servidor: se um lance entrou enquanto a
+  tela estava aberta, a recusa (`LOT_HAS_BIDS`) é mostrada e a lista é relida.
+- **Novo lote valida "encerramento no futuro" pelo relógio do servidor**, não pelo do navegador.
+  Início no passado é permitido (o lote simplesmente abre na hora), igual à API.
+- **A busca no acervo continua passando pelo backend** (com degradação). A alternativa registrada na
+  Parte A (buscar direto do navegador do leiloeiro) **não foi adotada**: depende de CORS e do desafio
+  do Cloudflare, que não pude testar. Como a API do museu responde 403 até daqui, o painel mostra o aviso
+  de degradação e o acervo local (10 obras; o aviso sugere termos que existem lá).
+
+**Rotas e papéis**: `/wins` e `/auctioneer*` exigem o papel certo (`RequireRole`), mas é só conveniência
+de navegação: a autorização real continua no servidor (papel no token **e** relido no banco).
+`/wallet` serve os dois papéis; o depósito só aparece para licitante.
+
+**Docker Compose completo** (`db` + `api` + `web`): a API é uma imagem única (servidor + worker) que
+roda `prisma migrate deploy` no start; o front é build estático servido pelo nginx com fallback de SPA
+(sem ele, abrir direto `/r/<token>` ou `/audit/<id>` daria 404). `VITE_API_URL` é gravada no bundle em
+tempo de *build* e chamada pelo navegador, então precisa ser um endereço alcançável de fora do Docker.
+`pnpm db:up` continua subindo só o banco.
+
+**Não verificado (honestidade)**: nenhuma tela foi aberta por mim num navegador (a automação de Chrome
+não estava disponível na sessão); a conferência visual, o mobile a 390 px, a folha de lance e o estado
+"adulterado" da auditoria ficam para olho humano. O contrato de cada tela foi conferido contra a API
+real por script.
+
+---
+
+## 2026-10-27 — Ajustes pós-revisão visual: login, perfil, carteira e sala do lote
+
+Pedidos do usuário depois de olhar as telas. **Nada commitado ainda** (pedido do usuário).
+
+- **Login/Cadastro 50% / 50%**: o painel de marca deixou de ter largura fixa (640 px) e passou a
+  `flex: 1 1 0`, igual ao painel do formulário. Em telas até 1100 px reduz padding e título para o texto não
+  apertar. No mobile continua só o formulário. Vale para o Cadastro (mesma moldura).
+- **Carteira**: removido o parágrafo longo sobre "disponível = total − comprometido". A explicação continua dentro
+  dos cartões (Comprometido e Disponível), então não se perde informação.
+- **Sala do lote, um único acesso à auditoria**: o texto do histórico que repetia o link foi removido; ficou o botão
+  "Auditoria pública deste lote" na coluna lateral (agora um botão secundário de largura total, não um link solto).
+- **"Ficha da obra"** no lugar do parágrafo "Dados da obra salvos no lote…" (que falava do sistema, não da obra).
+  A tabela passou a mostrar mais do snapshot: **Artista completo** (nacionalidade e anos; o título só mostra a
+  primeira linha), **Referência no acervo** (`main_reference_number`, que já estava no snapshot e não era exibido),
+  além de Data, Técnica, Dimensões, Crédito e Domínio público. A montagem das linhas é a função pura
+  `artworkFacts` (`lib/lots.ts`), testada. Os valores vêm do museu **em inglês** e não são traduzidos.
+- **Perfil (`/profile`) reescrito, sem migration**: cabeçalho (avatar, nome, papel, alias), "Dados da conta"
+  (nome editável; e-mail e alias em campos só leitura, com o porquê), "Segurança" (troca de senha), resumo por papel
+  (licitante: disponível, comprometido e arremates; leiloeiro: ao vivo, agendados e total recebido, reaproveitando as
+  mesmas consultas e chaves de cache das outras telas) e "Sessão". Não existe frame de Perfil no Figma: segue os
+  tokens e componentes já usados.
+  - **Escolha do usuário**: editar só o que já existe. Campos novos (telefone, cidade, bio) exigiriam migration
+    (com o risco de drift do Prisma, CLAUDE.md §4.1) e dado pessoal fora da auditoria; ficaram de fora.
+  - **Dois endpoints novos**: `PATCH /auth/me` (só `displayName`, aparado; o id vem do token e campos extras como
+    `role` ou `publicAlias` no corpo são ignorados) e `POST /auth/password` (exige a senha atual, 204).
+  - **`INVALID_CURRENT_PASSWORD` é 422, não 401**: a pessoa está autenticada. Um 401 seria lido pelo front como
+    sessão expirada (`apiFetch` limpa a sessão em 401 `UNAUTHORIZED`).
+  - **Senha nova de 8 a 72**: o bcrypt só considera os primeiros 72 **bytes**; sem o teto, a parte que passa disso
+    seria ignorada em silêncio. O front conta bytes em UTF-8 (um acento ocupa 2). Observação: o **cadastro** não
+    tem esse teto (só mínimo de 8), então uma senha longa criada no cadastro tem a mesma ressalva. Não alterei o
+    cadastro (fora do pedido).
+  - **O nome não afeta a auditoria**: o hash usa o alias, não o nome; o alias é imutável. Por isso editar o nome é
+    seguro.
+  - **Limitação (JWT stateless)**: trocar a senha não derruba sessões abertas; elas valem até o token expirar. A
+    tela avisa. Corrigir exigiria versão de token ou lista de revogação no banco.
+  - O nome atualizado vai para o contexto de autenticação (`updateUser`), então o avatar e o nome do cabeçalho mudam
+    sem recarregar.
+
+**Verificação**: 8 testes novos de API (nome: ok, curto, sem token, ignora `role`/`alias`; senha: troca de fato, senha
+atual errada não altera nada, nova inválida, sem token), testes de `artworkFacts` e da validação do perfil. Contrato
+conferido por script contra a API real com uma conta criada para o teste. **Não verificado**: nenhuma das telas foi
+aberta em navegador (visual, 50/50 do login, mobile do perfil ficam para olho humano).
+
+## 27/10 — Fonte dos itens: Art Institute of Chicago → Cleveland Museum of Art
+
+**Contexto**: as imagens do AIC (`www.artic.edu/iiif/...`) não carregavam, nem no navegador: o host fica atrás de
+um Cloudflare Managed Challenge, que uma tag `<img>` não consegue resolver, e a API devolve 403 a clientes sem
+navegador (ver CLAUDE.md §6). A demonstração ficava sem imagens e a busca sempre caía no fallback.
+
+**Decisão** (aprovada pelo usuário): trocar a fonte para a API aberta do Cleveland Museum of Art
+(`openaccess-api.clevelandart.org`, dados CC0, sem Cloudflare; imagens em `openaccess-cdn.clevelandart.org`, que
+respondeu 200 `image/jpeg`). O enunciado cita o AIC; é um desvio consciente, registrado também no README.
+
+- Mapeamento para o snapshot (`lots.attributes`, formato inalterado): `creators[].description` → `artist_display`,
+  `creation_date` → `date_display`, `technique` → `medium_display`, `measurements` → `dimensions`,
+  `creditline` → `credit_line`, `accession_number` → `main_reference_number`, `share_license_status == "CC0"` →
+  `is_public_domain`, `images.web.url` → `image_url` do lote.
+- `external_source` passa a `"cleveland"`; `modules/external/artic.ts` virou `cleveland.ts`. Timeout, cache,
+  cooldown e degradação ficaram como estavam.
+- `fallback-artworks.json` (usado pelo seed e pela degradação) agora tem 16 registros reais do Cleveland.
+- Lotes já publicados com URL do AIC continuam com ela: re-rodar o seed no deploy resolve (o seed apaga tudo).
+- A imagem continua sem passar pelo nosso backend; só a URL é salva no snapshot.

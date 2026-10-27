@@ -218,3 +218,56 @@ Validação feita com `curl` e `WebFetch` **antes** de desenhar o schema/código
 
 Seed obrigatório: 1 leiloeiro, 2 licitantes (com saldo), ≥1 lote ao vivo com lances, 1 agendado,
 1 encerrado já liquidado. Credenciais de teste no README.
+
+## 9. Como rodar e testar localmente
+
+**Subir o ambiente (3 terminais, da raiz do repo)**
+
+1. Banco e dados: `pnpm db:up` (Postgres via Docker, porta 5433); depois, em `apps/api`:
+   `pnpm exec prisma migrate deploy` (só na 1ª vez) e `pnpm exec prisma db seed` (reseta o banco).
+   `apps/api/.env` vem de `.env.example` (JWT_SECRET e AUDIT_SECRET com 16+ chars).
+2. API: `pnpm dev:api` → http://localhost:3000 (conferir `/health`).
+3. Front: `pnpm dev:web` → http://localhost:5173.
+
+**Contas de teste** (senha `demo12345`): `licitante1@demo.com` (US$ 50.000),
+`licitante2@demo.com` (US$ 30.000), `leiloeiro@demo.com`.
+
+**Testes automatizados**: `pnpm --filter @leilao/api test` (128, exigem o Postgres no ar),
+`pnpm --filter @leilao/web test` (126), `pnpm lint`. Os testes da API não limpam o que criam;
+o seed limpa tudo.
+
+**Roteiro manual da Vitrine/acesso**: abas com contagem, busca (`piranesi`, depois `zzzz` para o
+estado vazio), ordenação, contagem regressiva; cadastro (senha curta, e-mail repetido); login
+(senha errada, recarregar mantém sessão, sair pelo avatar); `/profile` deslogado redireciona ao
+login e volta. Mobile: DevTools a 390 px. Back-end sem tela:
+`curl localhost:3000/lots?phase=live`, `curl localhost:3000/audit/lots/<id>`.
+
+**Roteiro manual das demais telas** (duas janelas, uma anônima): Sala do lote (`/lots/:id`): lance
+em uma janela aparece na outra sem recarregar; recusas (abaixo do mínimo, "já lidera", leiloeiro,
+deslogado); derrubar a API mostra "Reconectando…". Carteira (`/wallet`): depósito e extrato; o
+comprometido sobe ao liderar um lote. Meus arremates (`/wins`) com `licitante1`. Auditoria (`/audit`,
+`/audit/:id`) e comprovante (`/r/<token>`, o token vem de `/wins`). Leiloeiro (`/auctioneer`,
+`/auctioneer/new`): busca `piranesi` (o museu responde 403 e cai no acervo local), publicar, cancelar
+lote sem lances. Mobile a 390 px: barra de lance fixa e folha na sala; tabela do painel vira cartões.
+Docker: `docker compose up --build -d` sobe tudo (ver README).
+
+**Atenção**
+- Os lotes "ao vivo" do seed vencem com o tempo (um em ~20 min); se a vitrine esvaziar, rode o seed de novo.
+- Imagens IIIF do museu podem aparecer como "Imagem indisponível" (bloqueio Cloudflare/ORB visto
+  em Chrome automatizado). Conferir no navegador real do usuário; o fallback já existe.
+- Nunca gravar credenciais do Render (DATABASE_URL, AUDIT_SECRET) em arquivos; usar só variáveis
+  de ambiente do comando.
+
+## 10. Estado atual (27/10/2026)
+
+- Deploy no ar (versão anterior): API https://leilao-api-4ogr.onrender.com, front
+  https://leilao-project-seven.vercel.app. **Falta publicar a versão nova** (push + redeploy + re-seed).
+- Backend completo (Etapas 1–3 + Parte A da 4). Front completo (Parte B): Vitrine, login/cadastro,
+  Sala do lote (SSE), Carteira, Meus arremates, Comprovante, Auditoria, Painel do leiloeiro e Novo lote.
+- Docker Compose completo (db + api + web), README final e docs da Parte B escritos.
+- Commits locais ainda NÃO enviados ao remoto (push só com confirmação do usuário).
+- Pendente: conferência VISUAL pelo usuário (nenhuma tela foi aberta em navegador pelo Claude: a
+  automação de Chrome não estava disponível), push, deploy final e re-seed perto da avaliação.
+- Figma: fileKey `TcgIkTavwQ8L6p3pWLbtkb`; carregar a skill `figma-design-to-code` antes de
+  `get_design_context` (se a skill não estiver listada, ler o recurso MCP
+  `skill://figma/figma-design-to-code/SKILL.md`).

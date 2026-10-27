@@ -114,9 +114,80 @@ estados) foi feita via servidor MCP do Figma, em modo leitura.
   `FOR UPDATE` do lote e o que acontece numa corrida entre cancelar e dar lance.
 - `modules/events/routes.ts`: `reply.hijack()`, o repasse manual dos cabeçalhos CORS, o heartbeat e a
   limpeza ao desconectar. É o código mais fácil de errar sem perceber (vazamento de assinantes).
-- `modules/external/artic.ts`: o fallback local e o cooldown. **A API real nunca foi exercitada** (403 do
+- `modules/external/cleveland.ts`: o fallback local e o cooldown. **A API real nunca foi exercitada** (403 do
   Cloudflare, inclusive daqui); só respostas simuladas. Não afirmar em entrevista que a busca ao vivo funciona.
 - Mudança de contrato do `/me/auctions` (`results` -> `lots`).
 - Meus erros nesta rodada, para saber o que conferir: o `sed` de uma tentativa anterior corrompeu o
   `render.yaml` (corrigido); e uma vez tentei repetir um `curl` com User-Agent de navegador para
   contornar o anti-bot, o que foi bloqueado e **não deve ser feito**.
+
+---
+
+## Etapa 4, Parte B: telas do front + Docker Compose + README (2026-10-27)
+
+**O que a IA gerou**: todo o front restante, a partir dos frames do Figma lidos via servidor MCP (só
+leitura): Sala do lote (SSE, painel de lance, bottom sheet no mobile), Carteira, Auditoria pública
+(`/audit`, `/audit/:id`), Comprovante (`/r/:token`), Meus arremates, Painel do leiloeiro e Novo lote. A
+lógica pura ficou em `apps/web/src/lib/` com testes Vitest (de 28 para 112). Também os Dockerfiles, o
+`docker-compose.yml` completo (db + api + web), `nginx.conf`, o README final e as entradas de
+`DECISIONS.md`. Nenhuma mudança de API.
+
+**O que precisa de revisão humana** (explicar em entrevista):
+- `hooks/useLotStream.ts` + `lib/room.ts`: como o SSE vira estado de tela. Pontos para saber explicar:
+  por que o stream escreve no cache do React Query (fonte única), por que a cada `ready` o lote e o
+  histórico são relidos (o servidor não reenvia eventos perdidos) e por que `applyBidPlaced` ignora
+  evento com `bidCount` menor ou igual (o mesmo lance chega pela resposta do POST e pelo SSE).
+- `components/BidPanel.tsx`: as regras do cliente (mínimo, já lidera, saldo) são **dicas de UX**; quem
+  decide é o servidor, que devolve códigos estáveis traduzidos em `lib/errors.ts`.
+- `lib/audit.ts`: a separação entre quebra *da cadeia* e quebra *fora da cadeia*, e por que falha de
+  rede é "inconclusiva" e não "adulterado". É a parte mais fácil de mostrar errado sem perceber.
+- `lib/money.ts`: conversão do texto digitado para centavos sem float, e a regra de que "12.950" sem
+  vírgula é 12 mil e 950.
+- `PhaseWatcher` (`pages/LotRoom.tsx`): o cliente nunca decide a fase; só pergunta de novo ao servidor.
+
+**Limites do que foi verificado (leia antes de afirmar algo)**:
+- **Nenhuma tela foi aberta por mim num navegador.** A automação de Chrome não estava disponível na
+  sessão. Verifiquei: `tsc` limpo, 112 testes de lógica e o contrato de cada tela contra a API real por
+  script (formatos de resposta, códigos de erro, SSE entregando `bid_placed`). **Não verifiquei**:
+  layout, mobile a 390 px, a folha de lance, o foco do teclado, nem o estado "adulterado" da auditoria
+  com um banco realmente adulterado (a lógica das quebras está coberta por testes unitários).
+- **A API do museu nunca foi exercitada ao vivo** (403 do Cloudflare até daqui): o painel do leiloeiro
+  só mostrou o caminho degradado. Não afirmar em entrevista que a busca ao vivo funciona.
+- O Docker Compose foi validado subindo o stack num projeto isolado (portas e volume próprios); ver o
+  README para o que exatamente foi conferido.
+
+**Erros meus nesta rodada, para saber o que conferir**:
+- Um comando em lote com vários `heredoc` falhou na análise do shell e não criou nada; refiz com a
+  ferramenta de escrita. Sem efeito no repositório.
+- Deixei uma API de teste rodando em background e ela ocupou a porta 3000 quando você tentou subir a
+  sua; encerrei só esse processo (conferi o PID e a linha de comando antes).
+- Os testes de contrato **escreveram no banco de dev**: um depósito de US$ 500 em `licitante1@demo.com`,
+  um lance em um lote ao vivo e um lote criado e cancelado pelo leiloeiro. O seed limpa tudo.
+- No início esqueci de checar que o relógio do servidor vem aninhado em `lot.serverNow` nas respostas de
+  lote (não no topo); `fetchLot` recalibra o relógio por isso, e não o `apiFetch`.
+
+---
+
+## Ajustes pós-revisão visual: login, perfil, carteira e sala do lote (2026-10-27)
+
+**O que a IA gerou**: o CSS do login 50/50; a remoção do texto da Carteira e da duplicidade de auditoria na sala
+do lote; a "Ficha da obra" (`artworkFacts`); a tela de Perfil reescrita (`pages/Profile.tsx`, `Profile.css`,
+`lib/profile.ts`); e dois endpoints novos de conta (`PATCH /auth/me`, `POST /auth/password`) com 8 testes. O usuário
+decidiu o escopo do Perfil (editar o que já existe, sem migration) e a divisão 50/50 do login. Nada commitado ainda.
+
+**O que precisa de revisão humana** (explicar em entrevista):
+- `modules/auth/service.ts` (`changePassword`): confere a senha atual com `bcrypt.compare` antes de gravar o novo
+  hash. Saber explicar por que o erro é **422** e não 401 (o front trata 401 `UNAUTHORIZED` como sessão expirada) e
+  por que a senha nova tem teto de **72 bytes** (bcrypt trunca).
+- **Limitação que não resolvi**: o JWT é stateless; trocar a senha **não revoga** sessões abertas. Está dito na tela,
+  no README e no `DECISIONS.md`. Não afirmar que a troca de senha "desloga todos os aparelhos".
+- O **cadastro** continua sem o teto de 72 bytes na senha (só mínimo 8): inconsistência conhecida, fora do pedido.
+- `lib/profile.ts`: a validação do front espelha a da API (conta bytes em UTF-8), mas é só conveniência; o servidor
+  valida de novo.
+
+**Limites do que foi verificado**: lint, 128 testes da API, 126 do front, build de produção e um script contra a API
+real (criou uma conta própria, não alterou o seed). **Nenhuma tela foi aberta em navegador.** O layout do login
+50/50, o Perfil (desktop e mobile) e a "Ficha da obra" precisam de conferência visual do usuário.
+
+**Erro meu desta rodada**: um `heredoc` converteu `\n` em quebra de linha real dentro de strings de um teste, gerando
+erro de sintaxe; percebi pelo `tsc` e corrigi antes de seguir. Sem efeito fora do arquivo de teste.
