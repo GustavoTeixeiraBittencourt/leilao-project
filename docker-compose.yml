@@ -1,3 +1,14 @@
+# Ambiente completo: Postgres + API (com o worker) + front.
+#
+#   docker compose up --build -d                        # sobe tudo
+#   docker compose exec -e ALLOW_SEED_RESET=1 api pnpm --filter @leilao/api prisma:seed   # dados de demonstração
+#   -> front http://localhost:5173 · API http://localhost:3000/health
+#
+# Só o banco (desenvolvimento local, com API e front rodando fora do Docker): `pnpm db:up`.
+#
+# Os segredos abaixo são VALORES DE DEMONSTRAÇÃO para rodar localmente. Em qualquer ambiente
+# real defina JWT_SECRET e AUDIT_SECRET próprios (ex.: `openssl rand -hex 32`) e NUNCA troque o
+# AUDIT_SECRET depois do seed: a cadeia de hash é assinada com ele.
 services:
   db:
     image: postgres:16-alpine
@@ -7,7 +18,7 @@ services:
       POSTGRES_PASSWORD: leilao
       POSTGRES_DB: leilao
     ports:
-      - "5433:5432" # 5432 já está em uso pelo Postgres nativo do sistema
+      - "${DB_PORT:-5433}:5432" # 5432 costuma estar em uso pelo Postgres nativo do sistema
     volumes:
       - leilao_db_data:/var/lib/postgresql/data
     healthcheck:
@@ -15,6 +26,46 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Dentro da rede do Docker o banco é "db:5432" (a 5433 é só a porta publicada no host).
+      DATABASE_URL: postgresql://leilao:leilao@db:5432/leilao?schema=public
+      PORT: 3000
+      NODE_ENV: production
+      # Uma única origem: a do front abaixo.
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+      JWT_SECRET: ${JWT_SECRET:-demo-jwt-secret-change-me-0123456789}
+      AUDIT_SECRET: ${AUDIT_SECRET:-demo-audit-secret-change-me-0123456789}
+      WORKER_INTERVAL_MS: 1500
+    ports:
+      - "${API_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Chamada pelo NAVEGADOR: tem que ser o endereço da API visto de fora do Docker.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PORT:-5173}:80"
 
 volumes:
   leilao_db_data:
