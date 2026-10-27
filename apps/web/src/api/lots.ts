@@ -1,3 +1,4 @@
+import { syncServerClock } from "../lib/clock";
 import { apiFetch } from "./client";
 
 export type LotPhase = "scheduled" | "live" | "ended" | "cancelled";
@@ -44,6 +45,16 @@ export function fetchLots(params: { phase: ListedPhase; q?: string; limit?: numb
   const search = new URLSearchParams({ phase: params.phase, limit: String(params.limit ?? 20) });
   if (params.q) search.set("q", params.q);
   return apiFetch<LotList>(`/lots?${search.toString()}`);
+}
+
+export const lotQueryKey = (lotId: string) => ["lot", lotId] as const;
+
+// `lot.serverNow` vem aninhado (não no topo da resposta), então o relógio do servidor
+// é recalibrado aqui, e não pelo apiFetch.
+export async function fetchLot(lotId: string): Promise<Lot> {
+  const { lot } = await apiFetch<{ lot: Lot }>(`/lots/${lotId}`);
+  syncServerClock(lot.serverNow);
+  return lot;
 }
 
 // Chave única por (fase, busca, limite): a Vitrine usa a mesma chave para o herói e

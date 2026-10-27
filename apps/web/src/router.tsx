@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { RequireRole } from "./components/RequireRole";
+import { LotRoom } from "./pages/LotRoom";
 import { Login } from "./pages/auth/Login";
 import { Signup } from "./pages/auth/Signup";
 import { NotFound } from "./pages/NotFound";
@@ -17,6 +18,7 @@ export const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { path: "/", element: <Vitrine /> },
+      { path: "/lots/:id", element: <LotRoom /> },
       {
         path: "/profile",
         element: (

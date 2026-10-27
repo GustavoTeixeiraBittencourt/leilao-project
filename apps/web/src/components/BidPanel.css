@@ -1,0 +1,54 @@
+.bid-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.bid-panel__current { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; max-width: 100%; }
+.bid-panel__amount { overflow-wrap: anywhere; }
+
+.bid-panel__form { display: flex; flex-direction: column; gap: var(--space-1); width: 100%; }
+.bid-panel__form > .notice { margin-block: var(--space-2); }
+.bid-panel__form > .notice a { text-decoration: underline; }
+.bid-panel__submit { width: 100%; min-height: 52px; margin-top: var(--space-3); }
+
+.bid-panel__available { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); width: 100%; }
+
+.bid-panel__error { color: var(--color-danger-fg); }
+.bid-panel__ok { color: var(--color-success-fg); }
+
+/* Campo do lance (Figma: borda forte, 52px, número 20px). O prefixo "US$" é rótulo fixo
+   para a pessoa digitar só o número; o texto cru continua sendo convertido em centavos
+   inteiros em lib/money.ts. */
+.bid-input {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+.bid-input:focus-within { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+.bid-input--error { border-color: var(--color-danger-fg); box-shadow: inset 0 0 0 1px var(--color-danger-fg); }
+.bid-input__prefix { color: var(--color-text-secondary); }
+.bid-input__field {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-3) 0;
+  background: none;
+  border: 0;
+  outline: none; /* o anel de foco fica no contêiner (:focus-within) */
+}
+.bid-input__field:disabled { color: var(--color-text-secondary); cursor: not-allowed; }
+
+@media (max-width: 767px) {
+  .bid-panel { padding: var(--space-4); }
+  .bid-panel__amount { font: 600 32px/38px var(--font-ui); letter-spacing: -0.5px; }
+}
