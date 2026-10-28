@@ -1,0 +1,5 @@
+/* Usa a base .badge do StatusBadge.css; aqui só as cores de cada situação. */
+.bid-badge--leading { background: var(--color-success-bg); border-color: var(--color-success-fg); color: var(--color-success-fg); }
+.bid-badge--outbid { background: var(--color-warning-bg); border-color: var(--color-warning-fg); color: var(--color-warning-fg); }
+.bid-badge--won { background: var(--color-success-fg); border-color: var(--color-success-fg); color: var(--color-text-on-brand); }
+.bid-badge--lost { background: var(--color-bg-subtle); border-color: var(--color-border-default); color: var(--color-text-secondary); }

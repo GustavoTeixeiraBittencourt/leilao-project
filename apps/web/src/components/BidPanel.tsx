@@ -5,6 +5,7 @@ import { bidsQueryKey, placeBid, type Bid } from "../api/bids";
 import { ApiError } from "../api/client";
 import { lotQueryKey, type Lot } from "../api/lots";
 import { fetchWallet, walletQueryKey } from "../api/wallet";
+import { myBidsQueryKey } from "../api/wins";
 import { useAuth } from "../hooks/useAuth";
 import { describeError, messageForCode } from "../lib/errors";
 import { bidsLabel, formatDayAt, formatMoney } from "../lib/format";
@@ -75,6 +76,8 @@ export function BidPanel({ lot, standing, onBidPlaced }: BidPanelProps) {
       queryClient.setQueryData(walletQueryKey, (current: unknown) =>
         current && typeof current === "object" ? { ...current, ...result.wallet } : current,
       );
+      // "Meus arremates" ganha (ou atualiza) este lote assim que a pessoa voltar para lá.
+      void queryClient.invalidateQueries({ queryKey: myBidsQueryKey });
       setTyped(null);
       setError(null);
       setConfirmation(

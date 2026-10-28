@@ -1,6 +1,22 @@
 .wins { display: flex; flex-direction: column; gap: var(--space-6); padding-block: var(--space-8) var(--space-16); }
 .wins__title { display: flex; flex-direction: column; gap: var(--space-1); }
 
+/* Abas: mesmo desenho das da Vitrine (sublinhado de 3px na ativa), um degrau abaixo do h1. */
+.wins__tabs { display: flex; gap: var(--space-6); overflow-x: auto; scrollbar-width: none; }
+.wins__tabs::-webkit-scrollbar { display: none; }
+.wins__tab {
+  padding: 0;
+  padding-bottom: var(--space-1);
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.wins__tab:hover { color: var(--color-text-primary); }
+.wins__tab--active { color: var(--color-text-primary); border-bottom-color: var(--color-brand-primary); }
+
 .wins__list { display: flex; flex-direction: column; margin: 0; padding: var(--space-4) 0 0; list-style: none; }
 .win {
   display: flex;
@@ -10,8 +26,10 @@
   border-top: 1px solid var(--color-border-default);
 }
 .win__image { flex: none; width: 160px; height: 120px; }
-.win__info { display: flex; flex: 1; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.win__info { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: var(--space-1); min-width: 0; }
 .win__title { overflow-wrap: anywhere; }
+.win__link:hover { color: var(--color-brand-primary); }
+.win__amounts { display: flex; flex: none; gap: var(--space-6); }
 .win__amount { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: var(--space-1); }
 .win__actions { display: flex; flex: none; flex-direction: column; align-items: stretch; gap: var(--space-2); width: 200px; }
 /* "Copiar link" é ação de baixa ênfase (terciária no Figma): texto na cor da marca, sem borda. */
@@ -28,5 +46,6 @@
   .win { flex-direction: column; align-items: stretch; }
   .win__image { width: 100%; height: 200px; }
   .win__amount { align-items: flex-start; }
+  .win__amounts { gap: var(--space-8); }
   .win__actions { width: 100%; }
 }

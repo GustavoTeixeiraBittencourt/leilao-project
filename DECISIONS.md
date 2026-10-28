@@ -471,3 +471,24 @@ contrário, mas não era verdade. Agora `settleNextDueLot` embrulha a falha em `
 passa a lista de pulados para `pickDueLot` (`NOT (id = ANY(...))`) e reporta cada falha ao worker, que registra
 `lot skipped`. O lote é tentado de novo no tick seguinte. Teste novo: um lote "veneno" vencido em 2000 não impede
 o fechamento de um lote saudável. Descoberto porque 4 testes falhavam num banco local com lixo de testes antigos.
+
+## 28/10 — "Meus arremates" passa a mostrar também os lances
+
+**Contexto**: o escopo descreve "Meus arremates" como a interface onde o licitante vê os itens em que deu lance e os
+lotes vencidos, com comprovante e link de compartilhamento. A tela só listava os vencidos (`/me/wins`); quem estava
+disputando, foi superado ou perdeu não via nada além do extrato da Carteira.
+
+**Decisão**: manter o nome e a rota (`/wins`) e ampliar a tela, com um endpoint novo `GET /me/bids` (só licitante).
+- **Um item por lote**, não por lance: o `groupBy` do banco já entrega o maior lance, a contagem e o último lance,
+  na ordem certa (mais recente primeiro, teto de 100). O histórico lance a lance continua no extrato da Carteira.
+- **Situação derivada, sem coluna nova**, a partir de `leaderId`/`winnerId`/`status` do lote: `leading` (aberto e eu
+  lidero), `outbid` (aberto e outra pessoa lidera, ainda dá para cobrir), `won` (fechado e sou o vencedor, com
+  `receiptToken`) e `lost` (fechado e outra pessoa venceu). Lote vencido e ainda não liquidado segue `leading`/`outbid`
+  até o worker fechar, como no resto do sistema. Usei `leaderId`/`winnerId` e não `seq === bidCount` (que é o que o
+  extrato da Carteira usa) por ser a fonte direta da verdade.
+- **Abas** Todos, Em disputa (liderando + superado), Arrematados e Não arrematados, em `?tab=` como na Vitrine. Os
+  arrematados mantêm "Ver comprovante" e "Copiar link público", que é o requisito original.
+- **Só o comprovante de quem arrematou** sai no `receiptToken`; o resto vem `null`. Nada de alias ou dado de outra pessoa.
+- Leitura pura: não toca no ledger nem no saldo.
+- `GET /me/wins` e o stat "Arremates" do Perfil ficam como estavam.
+- **Ordem de deploy**: o front agora depende do endpoint novo; publicar a API (Render) antes de confiar em `/wins`.

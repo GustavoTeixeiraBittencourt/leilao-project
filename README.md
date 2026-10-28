@@ -41,7 +41,7 @@ Dois papéis, cada conta tem um só:
 | Vitrine (ao vivo, agendados, encerrados; busca e ordenação) | `/` | todos |
 | Sala do lote ao vivo (SSE, contagem regressiva, histórico, "você está ganhando / foi superado") | `/lots/:id` | todos (dar lance: licitante) |
 | Carteira (total, comprometido, disponível, depósito simulado, extrato) | `/wallet` | logado |
-| Meus arremates (comprovante e link compartilhável) | `/wins` | licitante |
+| Meus arremates (lotes em que dei lance e os vencidos, com comprovante e link compartilhável) | `/wins` | licitante |
 | Comprovante público | `/r/:token` | todos |
 | Auditoria pública (histórico completo e veredito íntegro/adulterado) | `/audit`, `/audit/:lotId` | todos, sem login |
 | Painel do leiloeiro: meus lotes, resultado dos encerrados, cancelar lote sem lances | `/auctioneer` | leiloeiro |
