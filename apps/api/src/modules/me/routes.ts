@@ -1,6 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import { prisma } from "../../db/client.js";
-import { lotDto } from "../lots/dto.js";
+import { lotDto, lotPhase } from "../lots/dto.js";
+import { bidderLotStatus } from "./bid-status.js";
+
+// Teto de lotes na tela "Meus arremates" (os de lance mais recente primeiro).
+const MY_BIDS_LIMIT = 100;
 
 export async function meRoutes(app: FastifyInstance) {
   // "Meus arremates": lotes que o licitante venceu, com o token do comprovante
@@ -21,6 +25,59 @@ export async function meRoutes(app: FastifyInstance) {
         issuedAt: receipt.issuedAt.toISOString(),
       })),
       serverNow: new Date().toISOString(),
+    };
+  });
+
+  // "Meus arremates", visão completa: todos os lotes em que o licitante deu lance, um item
+  // por lote, com a situação (liderando, superado, arrematado, não arrematado). Os vencidos
+  // trazem o token do comprovante. Leitura pura: não toca no ledger nem no saldo.
+  app.get("/me/bids", { preHandler: [app.authenticate, app.requireRole("bidder")] }, async (request) => {
+    const userId = request.user.sub;
+
+    // O banco agrupa por lote: maior lance, quantidade e horário do último lance, já na
+    // ordem certa (o lote com lance mais recente primeiro).
+    const groups = await prisma.bid.groupBy({
+      by: ["lotId"],
+      where: { bidderId: userId },
+      _max: { amountCents: true, placedAt: true },
+      _count: { _all: true },
+      orderBy: { _max: { placedAt: "desc" } },
+      take: MY_BIDS_LIMIT,
+    });
+
+    const lots = await prisma.lot.findMany({
+      where: { id: { in: groups.map((group) => group.lotId) } },
+      include: { receipt: { select: { publicToken: true, issuedAt: true } } },
+    });
+    const lotById = new Map(lots.map((lot) => [lot.id, lot]));
+
+    const now = new Date();
+    return {
+      bids: groups.flatMap((group) => {
+        const lot = lotById.get(group.lotId);
+        if (!lot) return [];
+        const status = bidderLotStatus(lot, userId);
+        const finalPrice = lot.finalPriceCents ?? lot.currentBidCents;
+        return [
+          {
+            lotId: lot.id,
+            title: lot.title,
+            imageUrl: lot.imageUrl,
+            phase: lotPhase(lot, now),
+            endsAt: lot.endsAt.toISOString(),
+            status,
+            myHighestBidCents: Number(group._max.amountCents),
+            myBidCount: group._count._all,
+            // Lote aberto: lance atual. Lote fechado: valor final.
+            currentBidCents: finalPrice === null ? null : Number(finalPrice),
+            // O comprovante só existe (e só é do usuário) quando ele arrematou.
+            receiptToken: status === "won" ? (lot.receipt?.publicToken ?? null) : null,
+            issuedAt: status === "won" ? (lot.receipt?.issuedAt.toISOString() ?? null) : null,
+            lastBidAt: (group._max.placedAt as Date).toISOString(),
+          },
+        ];
+      }),
+      serverNow: now.toISOString(),
     };
   });
 
