@@ -14,7 +14,7 @@ import { formatCountdown, remainingMs, serverNowMs } from "../lib/clock";
 import { describeError } from "../lib/errors";
 import { bidsLabel, firstLine, formatDayAt, formatMoney, lotCode } from "../lib/format";
 import { artworkFacts } from "../lib/lots";
-import { needsPhaseRefresh, remainingAnnouncement, standingOf } from "../lib/room";
+import { bidsAscending, needsPhaseRefresh, remainingAnnouncement, standingOf } from "../lib/room";
 import { Button, ButtonLink } from "../ui/Button";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
 import "./LotRoom.css";
@@ -198,7 +198,7 @@ export function LotRoom() {
   const lotQuery = useQuery({ queryKey: lotQueryKey(id), queryFn: () => fetchLot(id) });
   const bidsQuery = useQuery({
     queryKey: bidsQueryKey(id),
-    queryFn: async () => (await fetchBids(id)).bids,
+    queryFn: async () => bidsAscending((await fetchBids(id)).bids),
     // O SSE mantém o histórico em dia; a leitura só repete na (re)conexão do stream.
     staleTime: 60_000,
   });

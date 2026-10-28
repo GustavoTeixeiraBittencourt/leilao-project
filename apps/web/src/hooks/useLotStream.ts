@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import {
   bidsQueryKey,
-  type BidList,
+  type Bid,
   type BidPlacedEvent,
   type LotCancelledEvent,
   type LotClosedEvent,
@@ -59,9 +59,7 @@ export function useLotStream(lotId: string, enabled: boolean): StreamStatus {
       if (!data) return;
       syncServerClock(data.serverNow);
       updateLot((lot) => applyBidPlaced(lot, data));
-      queryClient.setQueryData<BidList>(bidsQueryKey(lotId), (list) =>
-        list ? { ...list, bids: mergeBid(list.bids, data.bid) } : list,
-      );
+      queryClient.setQueryData<Bid[]>(bidsQueryKey(lotId), (list) => (list ? mergeBid(list, data.bid) : list));
     });
 
     source.addEventListener("lot_closed", (event) => {

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { bidsQueryKey, placeBid, type BidList } from "../api/bids";
+import { bidsQueryKey, placeBid, type Bid } from "../api/bids";
 import { ApiError } from "../api/client";
 import { lotQueryKey, type Lot } from "../api/lots";
 import { fetchWallet, walletQueryKey } from "../api/wallet";
@@ -66,9 +66,9 @@ export function BidPanel({ lot, standing, onBidPlaced }: BidPanelProps) {
             })
           : current,
       );
-      queryClient.setQueryData<BidList>(bidsQueryKey(lot.id), (list) =>
+      queryClient.setQueryData<Bid[]>(bidsQueryKey(lot.id), (list) =>
         list && user
-          ? { ...list, bids: mergeBid(list.bids, { seq: result.bid.seq, bidderAlias: user.publicAlias, amountCents: result.bid.amountCents, placedAt: result.bid.placedAt }) }
+          ? mergeBid(list, { seq: result.bid.seq, bidderAlias: user.publicAlias, amountCents: result.bid.amountCents, placedAt: result.bid.placedAt })
           : list,
       );
       queryClient.setQueryData(walletQueryKey, (current: unknown) =>

@@ -39,6 +39,13 @@ export function applyLotCancelled(lot: Lot, _event: LotCancelledEvent): Lot {
   return { ...lot, status: "cancelled", phase: "cancelled" };
 }
 
+// A API entrega o histórico do mais novo para o mais antigo; a tela e o `mergeBid`
+// trabalham em ordem crescente de `seq` (a tela inverte só para exibir). Normaliza
+// uma vez, na entrada, para o cache nunca guardar as duas ordens.
+export function bidsAscending(bids: Bid[]): Bid[] {
+  return [...bids].sort((a, b) => a.seq - b.seq);
+}
+
 // Insere o lance na ordem de `seq`, sem duplicar.
 export function mergeBid(bids: Bid[], bid: Bid): Bid[] {
   if (bids.some((existing) => existing.seq === bid.seq)) return bids;

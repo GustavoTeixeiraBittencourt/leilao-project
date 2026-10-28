@@ -6,6 +6,7 @@ import {
   applyBidPlaced,
   applyLotCancelled,
   applyLotClosed,
+  bidsAscending,
   mergeBid,
   minNextBidCents,
   needsPhaseRefresh,
@@ -141,6 +142,15 @@ describe("applyLotClosed / applyLotCancelled", () => {
   it("marks the lot as cancelled", () => {
     const cancelled = applyLotCancelled(lot(), { type: "lot_cancelled", lotId: "lot-1", serverNow: "x" });
     expect(cancelled).toMatchObject({ status: "cancelled", phase: "cancelled" });
+  });
+});
+
+describe("bidsAscending", () => {
+  it("turns the API order (newest first) into ascending seq, so the last item is the leader", () => {
+    const fromApi: Bid[] = [bid(3, "c", 300), bid(2, "b", 200), bid(1, "a", 100)];
+    const ordered = bidsAscending(fromApi);
+    expect(ordered.map((b) => b.seq)).toEqual([1, 2, 3]);
+    expect(fromApi.map((b) => b.seq)).toEqual([3, 2, 1]);
   });
 });
 
