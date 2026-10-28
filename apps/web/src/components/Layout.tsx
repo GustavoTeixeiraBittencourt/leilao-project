@@ -170,8 +170,8 @@ function Footer() {
       <div className="site-footer__inner">
         <p className="t-h2">ACERVO</p>
         <p className="t-body-s">
-          Os dados dos lotes são salvos no sistema: a vitrine, as salas e a auditoria continuam funcionando mesmo se a
-          API do Cleveland Museum of Art estiver fora do ar. Imagens carregadas diretamente do acervo do museu.
+          Cada lote guarda uma cópia dos dados da obra, então a vitrine, as salas e a auditoria seguem no ar mesmo com
+          o acervo do museu fora do ar. As imagens vêm direto do museu.
         </p>
         <p className="t-caption">Obras do acervo aberto (CC0) do Cleveland Museum of Art. Saldos, valores e lances são simulados.</p>
       </div>

@@ -109,7 +109,7 @@ export function ReceiptPage() {
         <div className="receipt__body">
           <LotImage src={receipt.lot.imageUrl} alt={receipt.lot.title} className="receipt__image" />
           <div className="receipt__details">
-            <Detail label="Obra">{artist ? `${receipt.lot.title} — ${artist}` : receipt.lot.title}</Detail>
+            <Detail label="Obra">{artist ? `${receipt.lot.title}, ${artist}` : receipt.lot.title}</Detail>
             <Detail label="Lote">nº {lotCode(receipt.lot.id)}</Detail>
             <Detail label="Vencedor (alias público)">{receipt.winnerAlias}</Detail>
             <Detail label="Valor final" big>

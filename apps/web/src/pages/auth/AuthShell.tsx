@@ -23,11 +23,11 @@ export function AuthShell({ width, children }: { width: number; children: ReactN
           <span className="auth__rule" />
           <p className="t-display-l">A arte deve parecer atemporal; a disputa, ao vivo.</p>
           <p className="t-body-l">
-            Leilões de obras do acervo do Art Institute of Chicago, com histórico de lances auditável por qualquer
+            Leilões de obras do acervo do Cleveland Museum of Art, com histórico de lances auditável por qualquer
             pessoa.
           </p>
         </div>
-        <p className="t-caption">Obras do Art Institute of Chicago · saldos e lances simulados</p>
+        <p className="t-caption">Obras do Cleveland Museum of Art · saldos e lances simulados</p>
       </aside>
     </div>
   );

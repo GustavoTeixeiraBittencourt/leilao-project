@@ -47,7 +47,7 @@ export function Login() {
 
       {errorCode && (
         <Notice tone="danger" title={badCredentials ? "E-mail ou senha incorretos" : "Não foi possível entrar"}>
-          {badCredentials ? "Confira os dados e tente novamente. Não foi possível entrar." : messageForCode(errorCode)}
+          {badCredentials ? "Confira os dados e tente novamente." : messageForCode(errorCode)}
         </Notice>
       )}
 

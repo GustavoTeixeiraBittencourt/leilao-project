@@ -24,7 +24,6 @@ function ProfileHeader({ user }: { user: AuthUser }) {
         {initial(user.displayName)}
       </span>
       <div className="profile__identity">
-        <p className="t-overline text-secondary">Minha conta</p>
         <h1 className="t-h1 profile__name">{user.displayName}</h1>
         <p className="profile__chips">
           <span className="profile__role t-label-s">{ROLE_LABEL[user.role]}</span>
@@ -72,8 +71,8 @@ function AccountCard({ user }: { user: AuthUser }) {
   }
 
   return (
-    <form className="card" onSubmit={submit} noValidate aria-labelledby="account-title">
-      <div className="card__head">
+    <form className="panel" onSubmit={submit} noValidate aria-labelledby="account-title">
+      <div className="panel__head">
         <h2 id="account-title" className="t-h3">
           Dados da conta
         </h2>
@@ -96,7 +95,7 @@ function AccountCard({ user }: { user: AuthUser }) {
       <Field label="E-mail" value={user.email} readOnly />
       <Field label="Alias público" value={user.publicAlias} readOnly />
 
-      <div className="card__actions">
+      <div className="panel__actions">
         <Button type="submit" loading={mutation.isPending} disabled={!dirty}>
           Salvar nome
         </Button>
@@ -140,8 +139,8 @@ function BidderSummary() {
   const wins = useQuery({ queryKey: winsQueryKey, queryFn: fetchWins });
 
   return (
-    <section className="card" aria-labelledby="summary-title">
-      <div className="card__head">
+    <section className="panel" aria-labelledby="summary-title">
+      <div className="panel__head">
         <h2 id="summary-title" className="t-h3">
           Resumo
         </h2>
@@ -166,7 +165,7 @@ function BidderSummary() {
           </div>
         )}
       </SummaryState>
-      <div className="card__links">
+      <div className="panel__links">
         <Link to="/wallet" className="profile__link t-label-m">
           Ir para a Carteira →
         </Link>
@@ -183,8 +182,8 @@ function AuctioneerSummary() {
   const kpis = auctions.data ? computeKpis(auctions.data.lots) : null;
 
   return (
-    <section className="card" aria-labelledby="summary-title">
-      <div className="card__head">
+    <section className="panel" aria-labelledby="summary-title">
+      <div className="panel__head">
         <h2 id="summary-title" className="t-h3">
           Resumo
         </h2>
@@ -198,7 +197,7 @@ function AuctioneerSummary() {
           </div>
         )}
       </SummaryState>
-      <div className="card__links">
+      <div className="panel__links">
         <Link to="/auctioneer" className="profile__link t-label-m">
           Ver meus lotes →
         </Link>
@@ -222,12 +221,12 @@ export function Profile() {
       <div className="profile__main">
         <AccountCard user={user} />
         {user.role === "bidder" ? <BidderSummary /> : <AuctioneerSummary />}
-        <section className="card card--session" aria-label="Sessão">
-          <div className="card__head">
+        <section className="panel panel--session" aria-label="Sessão">
+          <div className="panel__head">
             <h2 className="t-h3">Sessão</h2>
             <p className="t-body-s text-secondary">Encerra o acesso neste aparelho.</p>
           </div>
-          <div className="card__actions">
+          <div className="panel__actions">
             <Button
               variant="secondary"
               onClick={() => {

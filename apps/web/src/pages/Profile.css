@@ -22,7 +22,7 @@
 .profile__header, .profile__main { width: 100%; max-width: 720px; margin-inline: auto; }
 .profile__main { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
 
-.card {
+.panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
@@ -32,9 +32,9 @@
   border-radius: var(--radius-lg);
   min-width: 0;
 }
-.card__head { display: flex; flex-direction: column; gap: var(--space-1); }
-.card__actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
-.card__links { display: flex; flex-direction: column; gap: var(--space-2); }
+.panel__head { display: flex; flex-direction: column; gap: var(--space-1); }
+.panel__actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.panel__links { display: flex; flex-direction: column; gap: var(--space-2); }
 .profile__ok { color: var(--color-success-fg); }
 .profile__link { color: var(--color-brand-primary); width: fit-content; }
 .profile__link:hover { text-decoration: underline; }
@@ -54,5 +54,5 @@
   .profile__name { font-size: 30px; line-height: 36px; }
   .stats { grid-template-columns: minmax(0, 1fr); }
   .profile__main { gap: var(--space-4); }
-  .card { padding: var(--space-4); }
+  .panel { padding: var(--space-4); }
 }
