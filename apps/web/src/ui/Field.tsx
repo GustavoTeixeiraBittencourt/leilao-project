@@ -1,7 +1,7 @@
 import { useId, type InputHTMLAttributes } from "react";
 import "./Field.css";
 
-type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
+export type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   hint?: string;
   // Mensagem de erro. Sem texto, `invalid` ainda marca o campo (borda de erro).

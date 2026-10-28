@@ -7,7 +7,7 @@ import { describeError } from "../lib/errors";
 import { formatDateTime, formatMoney, lotCode } from "../lib/format";
 import { addToAmount, checkDeposit, entryLabel, formatSigned, MAX_DEPOSIT_CENTS } from "../lib/wallet";
 import { Button } from "../ui/Button";
-import { Field } from "../ui/Field";
+import { MoneyInput } from "../ui/MoneyInput";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
 import "../ui/Toast.css";
 import "./Wallet.css";
@@ -145,15 +145,13 @@ function DepositPanel() {
       <h2 className="t-h3">Depósito simulado</h2>
       <p className="t-body-s text-secondary">Nenhum dinheiro real é movimentado. Use para testar lances.</p>
 
-      <Field
+      <MoneyInput
         label="Valor do depósito (US$)"
-        inputMode="decimal"
-        autoComplete="off"
         value={text}
         error={error ?? undefined}
         hint={`Máximo ${formatMoney(MAX_DEPOSIT_CENTS)} por depósito`}
-        onChange={(event) => {
-          setText(event.target.value);
+        onValueChange={(next) => {
+          setText(next);
           setError(null);
           setConfirmedCents(null);
         }}

@@ -11,6 +11,7 @@ import { bidsLabel, formatDayAt, formatMoney } from "../lib/format";
 import { centsToInput, parseMoneyToCents } from "../lib/money";
 import { applyBidPlaced, mergeBid, minNextBidCents, type Standing } from "../lib/room";
 import { Button, ButtonLink } from "../ui/Button";
+import { moneyInputProps } from "../ui/MoneyInput";
 import { Notice } from "../ui/Notice";
 import { StatusBadge } from "../ui/StatusBadge";
 import "./BidPanel.css";
@@ -185,17 +186,15 @@ export function BidPanel({ lot, standing, onBidPlaced }: BidPanelProps) {
               <input
                 id="bid-amount"
                 className="bid-input__field t-number-m"
-                inputMode="decimal"
-                autoComplete="off"
                 value={value}
                 disabled={standing === "leading"}
                 aria-invalid={error ? true : undefined}
                 aria-describedby={error ? "bid-error" : "bid-help"}
-                onChange={(event) => {
-                  setTyped(event.target.value);
+                {...moneyInputProps((text) => {
+                  setTyped(text);
                   setError(null);
                   setConfirmation(null);
-                }}
+                })}
               />
             </div>
             {error ? (

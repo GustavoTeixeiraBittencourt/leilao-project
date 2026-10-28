@@ -9,6 +9,7 @@ import { describeError } from "../lib/errors";
 import { firstLine, formatDayAt } from "../lib/format";
 import { Button } from "../ui/Button";
 import { Field } from "../ui/Field";
+import { MoneyInput } from "../ui/MoneyInput";
 import { Notice } from "../ui/Notice";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
 import "../ui/Toast.css";
@@ -203,25 +204,21 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
       </div>
 
       <div className="config__row">
-        <Field
+        <MoneyInput
           label="Lance inicial (US$)"
-          inputMode="decimal"
-          autoComplete="off"
           placeholder="4.000,00"
           value={values.startingBid}
           hint="Primeiro lance ≥ este valor"
           error={errors.startingBid}
-          onChange={(event) => set("startingBid", event.target.value)}
+          onValueChange={(text) => set("startingBid", text)}
         />
-        <Field
+        <MoneyInput
           label="Incremento mínimo (US$)"
-          inputMode="decimal"
-          autoComplete="off"
           placeholder="500,00"
           value={values.minIncrement}
           hint="Lances seguintes ≥ atual + incremento"
           error={errors.minIncrement}
-          onChange={(event) => set("minIncrement", event.target.value)}
+          onValueChange={(text) => set("minIncrement", text)}
         />
       </div>
       <div className="config__row">
