@@ -10,3 +10,8 @@ coverage/
 
 apps/api/generated/
 apps/web/.vite/
+
+# Ferramentas locais do assistente (não fazem parte do projeto)
+.claude/
+.agents/
+skills-lock.json
