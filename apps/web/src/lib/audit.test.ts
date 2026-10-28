@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AuditResult } from "../api/audit";
-import { breakPointLabel, receiptNumber, receiptUrl, rowStatus, sealTail, shortHash, verdictMessage, verifiedCount } from "./audit";
+import { breakPointLabel, pageRangeLabel, paginate, receiptNumber, receiptUrl, rowStatus, sealTail, shortHash, verdictMessage, verifiedCount } from "./audit";
 
 function audit(overrides: Partial<AuditResult> = {}): AuditResult {
   const bids = [1, 2, 3, 4, 5].map((seq) => ({
@@ -152,5 +152,60 @@ describe("display helpers", () => {
 
   it("derives a receipt number from the token", () => {
     expect(receiptNumber("DOlgMHVGCzi7qy2w84YzKQ")).toBe("REC-DOLGMHVG");
+  });
+});
+
+describe("paginate / pageRangeLabel (setas < >)", () => {
+  const SIZE = 5;
+
+  it("starts on the first page: can go forward, not back", () => {
+    expect(paginate(1, 23, SIZE)).toEqual({ page: 1, pageCount: 5, start: 0, end: 5, canPrev: false, canNext: true });
+  });
+
+  it("in the middle both arrows work", () => {
+    expect(paginate(3, 23, SIZE)).toEqual({ page: 3, pageCount: 5, start: 10, end: 15, canPrev: true, canNext: true });
+  });
+
+  it("the last page holds the remainder and cannot go forward", () => {
+    expect(paginate(5, 23, SIZE)).toEqual({ page: 5, pageCount: 5, start: 20, end: 23, canPrev: true, canNext: false });
+  });
+
+  it("an exact multiple does not create an empty last page", () => {
+    expect(paginate(2, 10, SIZE)).toMatchObject({ pageCount: 2, start: 5, end: 10, canNext: false });
+  });
+
+  it("has a single page, and no arrows to use, when everything fits", () => {
+    expect(paginate(1, 5, SIZE)).toMatchObject({ pageCount: 1, canPrev: false, canNext: false });
+    expect(paginate(1, 3, SIZE)).toMatchObject({ pageCount: 1, start: 0, end: 3 });
+    expect(paginate(1, 0, SIZE)).toEqual({ page: 1, pageCount: 1, start: 0, end: 0, canPrev: false, canNext: false });
+  });
+
+  it("clamps a stale page when the list shrinks after a refetch", () => {
+    expect(paginate(5, 8, SIZE)).toMatchObject({ page: 2, start: 5, end: 8 });
+    expect(paginate(9, 0, SIZE)).toMatchObject({ page: 1 });
+  });
+
+  it("ignores nonsense page numbers", () => {
+    expect(paginate(0, 23, SIZE).page).toBe(1);
+    expect(paginate(-4, 23, SIZE).page).toBe(1);
+    expect(paginate(Number.NaN, 23, SIZE).page).toBe(1);
+    expect(paginate(2.9, 23, SIZE).page).toBe(2);
+  });
+
+  it("walking forward visits every item exactly once", () => {
+    const seen: number[] = [];
+    let window = paginate(1, 23, SIZE);
+    for (;;) {
+      for (let i = window.start; i < window.end; i += 1) seen.push(i);
+      if (!window.canNext) break;
+      window = paginate(window.page + 1, 23, SIZE);
+    }
+    expect(seen).toEqual(Array.from({ length: 23 }, (_, i) => i));
+  });
+
+  it("labels the visible range", () => {
+    expect(pageRangeLabel(paginate(1, 23, SIZE), 23)).toBe("1 a 5 de 23");
+    expect(pageRangeLabel(paginate(5, 23, SIZE), 23)).toBe("21 a 23 de 23");
+    expect(pageRangeLabel(paginate(1, 0, SIZE), 0)).toBe("0 de 0");
   });
 });

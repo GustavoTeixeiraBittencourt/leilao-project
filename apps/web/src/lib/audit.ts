@@ -106,3 +106,37 @@ export function receiptNumber(token: string): string {
 export function receiptUrl(origin: string, token: string): string {
   return `${origin.replace(/\/+$/, "")}/r/${token}`;
 }
+
+// ---- Paginação da lista de lotes (setas < >) ----
+
+export type PageWindow = {
+  // Página atual, 1-based, sempre dentro do intervalo válido.
+  page: number;
+  pageCount: number;
+  // Fatia [start, end) a exibir.
+  start: number;
+  end: number;
+  canPrev: boolean;
+  canNext: boolean;
+};
+
+// `page` pode vir fora do intervalo (a lista encolheu num refetch, estado velho): é ajustada
+// em vez de mostrar uma página vazia. Sem itens, há uma página vazia.
+export function paginate(page: number, total: number, pageSize: number): PageWindow {
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const current = Math.min(Math.max(Math.trunc(page) || 1, 1), pageCount);
+  const start = (current - 1) * pageSize;
+  return {
+    page: current,
+    pageCount,
+    start,
+    end: Math.min(start + pageSize, total),
+    canPrev: current > 1,
+    canNext: current < pageCount,
+  };
+}
+
+// "1 a 5 de 23": o intervalo da página, para o leitor saber onde está.
+export function pageRangeLabel(window: Pick<PageWindow, "start" | "end">, total: number): string {
+  return total === 0 ? "0 de 0" : `${window.start + 1} a ${window.end} de ${total}`;
+}

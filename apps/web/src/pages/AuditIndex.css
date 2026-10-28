@@ -16,4 +16,7 @@
   .audit-lot__go { display: none; }
 }
 
-.audit-index__section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.audit-index__pager { display: flex; align-items: center; gap: var(--space-3); }
+/* Seta: botão quadrado com alvo de toque de 44px (a altura já vem do .btn--sm). */
+.audit-index__arrow { min-width: 44px; padding-inline: 0; font-size: 18px; }
+.audit-index__section-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }

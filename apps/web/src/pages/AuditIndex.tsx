@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchLots, lotsQueryKey, type ListedPhase, type Lot } from "../api/lots";
+import { pageRangeLabel, paginate } from "../lib/audit";
 import { describeError } from "../lib/errors";
 import { bidsLabel, formatDayAt, formatMoney, lotCode } from "../lib/format";
 import { Button } from "../ui/Button";
@@ -9,7 +10,8 @@ import { StatusBadge } from "../ui/StatusBadge";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
 import "./AuditIndex.css";
 
-// A API não tem offset: busca até o teto (50) e a lista revela de 5 em 5 no cliente.
+// A API não tem offset: busca até o teto (50) e a lista é paginada no cliente, 5 por página
+// (setas < >), para a página não ficar extensa.
 const LIMIT = 50;
 const PAGE_SIZE = 5;
 
@@ -38,7 +40,12 @@ function LotRow({ lot }: { lot: Lot }) {
 
 function Section({ phase, title }: { phase: ListedPhase; title: string }) {
   const query = useQuery({ queryKey: lotsQueryKey(phase, "", LIMIT), queryFn: () => fetchLots({ phase, limit: LIMIT }) });
-  const [visible, setVisible] = useState(PAGE_SIZE);
+  const [page, setPage] = useState(1);
+
+  const lots = query.data?.lots ?? [];
+  // A página é ajustada se a lista encolher num refetch (nunca mostra uma página vazia).
+  const window = paginate(page, lots.length, PAGE_SIZE);
+  const listId = `audit-list-${phase}`;
 
   return (
     <section className="audit-index__section" aria-labelledby={`audit-${phase}`}>
@@ -46,10 +53,34 @@ function Section({ phase, title }: { phase: ListedPhase; title: string }) {
         <h2 id={`audit-${phase}`} className="t-h2">
           {title}
         </h2>
-        {query.data && visible < query.data.lots.length && (
-          <Button variant="secondary" size="sm" onClick={() => setVisible((current) => current + PAGE_SIZE)}>
-            Ver mais
-          </Button>
+        {window.pageCount > 1 && (
+          <nav className="audit-index__pager" aria-label={`Páginas de lotes: ${title}`}>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="audit-index__arrow"
+              aria-label="Página anterior"
+              aria-controls={listId}
+              disabled={!window.canPrev}
+              onClick={() => setPage(window.page - 1)}
+            >
+              <span aria-hidden="true">&lt;</span>
+            </Button>
+            <span className="t-label-s text-secondary num" role="status">
+              {pageRangeLabel(window, lots.length)}
+            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="audit-index__arrow"
+              aria-label="Próxima página"
+              aria-controls={listId}
+              disabled={!window.canNext}
+              onClick={() => setPage(window.page + 1)}
+            >
+              <span aria-hidden="true">&gt;</span>
+            </Button>
+          </nav>
         )}
       </div>
       {query.isPending ? (
@@ -58,11 +89,11 @@ function Section({ phase, title }: { phase: ListedPhase; title: string }) {
         <ErrorState title="Não foi possível carregar" onRetry={() => void query.refetch()}>
           {describeError(query.error)}
         </ErrorState>
-      ) : query.data.lots.length === 0 ? (
+      ) : lots.length === 0 ? (
         <EmptyState title="Nenhum lote por aqui" />
       ) : (
-        <ul className="audit-index__list">
-          {query.data.lots.slice(0, visible).map((lot) => (
+        <ul className="audit-index__list" id={listId}>
+          {lots.slice(window.start, window.end).map((lot) => (
             <LotRow key={lot.id} lot={lot} />
           ))}
         </ul>
