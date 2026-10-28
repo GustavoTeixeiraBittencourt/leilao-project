@@ -445,3 +445,29 @@ respondeu 200 `image/jpeg`). O enunciado cita o AIC; é um desvio consciente, re
 - `fallback-artworks.json` (usado pelo seed e pela degradação) agora tem 16 registros reais do Cleveland.
 - Lotes já publicados com URL do AIC continuam com ela: re-rodar o seed no deploy resolve (o seed apaga tudo).
 - A imagem continua sem passar pelo nosso backend; só a URL é salva no snapshot.
+
+## 28/10 — Revisão de design do front e worker resiliente a lote com erro
+
+**Revisão antiwebslop** (auditoria do `apps/web`; o front nunca teve o slop clássico, os achados foram bugs e tiques):
+- Bug: `.card` era definida em `Profile.css` e `AuctionCard.css`, e o CSS global do build mesclava as duas, encaixotando
+  os cards da Vitrine. O do Perfil virou `.panel`.
+- Links no meio de frase (`a` herdava cor e sem sublinhado) agora têm cor da marca e sublinhado (WCAG 1.4.1).
+- Eyebrows (`t-overline`) acima do `h1` removidos onde repetiam o título; ficam só os que carregam dado ("Lote nº").
+- Toast duplicado em Carteira e Novo lote virou `ui/Toast.css`, sem sombra (é inline, não flutua).
+- `--tabbar-height` e `--font-mono` viraram tokens; `t-display-l` no mobile é uma regra só em `base.css`;
+  `text-wrap: balance/pretty` global e medida de 65ch no corpo; `--color-text-secondary` escurecido para AA (4.5:1).
+- Carteira: o "Disponível" (o número que decide um lance) manda; barra de comprometido e conta total − comprometido
+  ficam sem caixas. Painel do leiloeiro: "Total recebido" grande e contagens em linha no lugar de 4 KPIs em tiles.
+- Hero: o slogan paralelo genérico foi trocado por texto sobre auditoria e anti-sniping, que só este produto tem.
+- **Fora desta rodada** (decisão de design, não de limpeza): CTAs repetidos por linha, ícones no lugar de glifos
+  de texto, `safe-area-inset` nas barras fixas do mobile.
+- Erro meu, corrigido: troquei o museu do footer para Chicago por engano; a fonte já era Cleveland desde 27/10.
+  Todos os textos de tela agora dizem Cleveland Museum of Art.
+
+**Worker: lote com erro não trava o fechamento dos outros.** `pickDueLot` ordena por `ends_at` e pega o primeiro.
+Um lote que lança erro (ex.: `bid_count` diverge da cadeia) sofre rollback, continua aberto e vencido, e seria
+escolhido de novo a cada tick, impedindo todos os mais novos de fechar; o comentário de `closeDueLots` dizia o
+contrário, mas não era verdade. Agora `settleNextDueLot` embrulha a falha em `DueLotError(lotId)`, `closeDueLots`
+passa a lista de pulados para `pickDueLot` (`NOT (id = ANY(...))`) e reporta cada falha ao worker, que registra
+`lot skipped`. O lote é tentado de novo no tick seguinte. Teste novo: um lote "veneno" vencido em 2000 não impede
+o fechamento de um lote saudável. Descoberto porque 4 testes falhavam num banco local com lixo de testes antigos.

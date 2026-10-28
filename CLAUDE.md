@@ -11,7 +11,6 @@ testes E2E/integração onde há risco de regra de negócio, avisar sobre trade-
 
 - Comunicação com o usuário: **português**.
 - Código, nomes de variáveis/funções, mensagens de commit: **inglês**.
-- **NUNCA** adicionar Claude como co-author nos commits (diferente do padrão default da ferramenta).
 - Não começar a codar sem apresentar plano (estrutura, schema, etapas) e obter OK explícito.
 - Decisões ambíguas: escolher a opção mais defensável, registrar em `DECISIONS.md`, seguir.
   Só perguntar ao usuário quando a decisão for irreversível ou cara de desfazer.
@@ -29,8 +28,9 @@ testes E2E/integração onde há risco de regra de negócio, avisar sobre trade-
 
 ## 2. O desafio — Casa de Leilões Online
 
-Itens vêm da API pública do **Art Institute of Chicago**
-(`https://api.artic.edu/api/v1/artworks`, imagens via IIIF em `www.artic.edu/iiif/2/...`).
+Itens vêm da API aberta do **Cleveland Museum of Art** (CC0)
+(`https://openaccess-api.clevelandart.org/api/artworks/`, imagens em `openaccess-cdn.clevelandart.org`).
+A fonte original era o Art Institute of Chicago; trocada em 27/10 (ver `DECISIONS.md`; a §6 abaixo é histórico).
 
 ### 2.1 Papéis
 - **LEILOEIRO**: cria/gerencia os próprios lotes. NÃO pode dar lances (bloqueado no backend).
