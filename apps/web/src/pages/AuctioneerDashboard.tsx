@@ -12,16 +12,6 @@ import { StatusBadge } from "../ui/StatusBadge";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
 import "./AuctioneerDashboard.css";
 
-function Kpi({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="kpi">
-      <span className="t-overline text-secondary">{label}</span>
-      <span className="t-number-l num">{value}</span>
-      <span className="t-caption text-secondary">{hint}</span>
-    </div>
-  );
-}
-
 // "28/10 14:00 · 20:00": início e fim; o dia do fim só aparece quando muda.
 function period(lot: MyLot): string {
   const start = formatDateTime(lot.startsAt);
@@ -126,7 +116,6 @@ export function AuctioneerDashboard() {
     <div className="container dashboard">
       <header className="dashboard__head">
         <div className="dashboard__titles">
-          <p className="t-overline text-secondary">Painel do leiloeiro</p>
           <h1 className="t-display-l">Meus lotes</h1>
         </div>
         <ButtonLink to="/auctioneer/new">+ Novo lote</ButtonLink>
@@ -153,16 +142,30 @@ function Content({ lots, totalReceivedCents }: { lots: MyLot[]; totalReceivedCen
 
   return (
     <>
-      <div className="dashboard__kpis">
-        <Kpi label="Ao vivo" value={String(kpis.live)} hint="aceitando lances agora" />
-        <Kpi label="Agendados" value={String(kpis.scheduled)} hint="ainda não abriram" />
-        <Kpi
-          label="Encerrados"
-          value={String(kpis.ended)}
-          hint={`${kpis.endedSold} arrematado${kpis.endedSold === 1 ? "" : "s"} · ${kpis.endedUnsold} sem lances`}
-        />
-        <Kpi label="Total recebido" value={formatMoney(totalReceivedCents)} hint="já liquidado na sua carteira" />
-      </div>
+      <section className="summary" aria-label="Resumo dos lotes">
+        <div className="summary__money">
+          <span className="t-overline text-secondary">Total recebido</span>
+          <span className="t-number-xl num">{formatMoney(totalReceivedCents)}</span>
+          <span className="t-caption text-secondary">já liquidado na sua carteira</span>
+        </div>
+        <ul className="summary__counts">
+          <li>
+            <span className="t-number-m num">{kpis.live}</span>
+            <span className="t-body-s">ao vivo</span>
+          </li>
+          <li>
+            <span className="t-number-m num">{kpis.scheduled}</span>
+            <span className="t-body-s">agendados</span>
+          </li>
+          <li>
+            <span className="t-number-m num">{kpis.ended}</span>
+            <span className="t-body-s">encerrados</span>
+            <span className="t-caption text-secondary">
+              {kpis.endedSold} arrematado{kpis.endedSold === 1 ? "" : "s"} · {kpis.endedUnsold} sem lances
+            </span>
+          </li>
+        </ul>
+      </section>
 
       {lots.length === 0 ? (
         <EmptyState title="Você ainda não criou nenhum lote">

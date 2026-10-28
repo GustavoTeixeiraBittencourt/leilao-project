@@ -7,7 +7,6 @@
   padding-block: var(--space-16);
 }
 .hero__text { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-6); }
-.hero__overline { color: var(--color-brand-primary); }
 .hero__ctas { display: flex; flex-wrap: wrap; gap: var(--space-3); }
 .hero__art { display: flex; flex-direction: column; gap: var(--space-2); }
 .hero__image { height: 560px; }

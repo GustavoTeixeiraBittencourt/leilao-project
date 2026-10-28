@@ -203,11 +203,10 @@ function Hero({ featured, onExplore }: { featured: Lot | null; onExplore: () => 
   return (
     <section className="hero container">
       <div className="hero__text">
-        <p className="t-overline hero__overline">Leilões ao vivo · Acervo Art Institute of Chicago</p>
-        <h1 className="t-display-l hero__title">A arte atravessa os séculos. A disputa acontece agora.</h1>
+        <h1 className="t-display-l hero__title">Lance em obras de museu, com cada oferta auditável por qualquer um.</h1>
         <p className="t-body-l text-secondary">
-          Dê lances em obras do acervo de um dos grandes museus do mundo, acompanhe cada oferta em tempo real e confira
-          o histórico de qualquer lote em uma auditoria pública.
+          Um lance nos últimos dois minutos reinicia o relógio em dois minutos, então ninguém arremata no susto. Cada
+          oferta aparece na hora para todos.
         </p>
         <div className="hero__ctas">
           <Button onClick={onExplore}>Explorar leilões ao vivo</Button>
@@ -224,7 +223,7 @@ function Hero({ featured, onExplore }: { featured: Lot | null; onExplore: () => 
             alt={`${featured.title}, ${firstLine(featured.attributes.artist_display)}`}
             className="hero__image"
           />
-          <p className="t-caption text-secondary">Obra em destaque do acervo · lote ao vivo</p>
+          <p className="t-caption text-secondary">{firstLine(featured.attributes.artist_display)}</p>
         </Link>
       )}
     </section>

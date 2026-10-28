@@ -9,6 +9,7 @@ import { addToAmount, checkDeposit, entryLabel, formatSigned, MAX_DEPOSIT_CENTS 
 import { Button } from "../ui/Button";
 import { Field } from "../ui/Field";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
+import "../ui/Toast.css";
 import "./Wallet.css";
 
 const QUICK_AMOUNTS = [
@@ -17,25 +18,41 @@ const QUICK_AMOUNTS = [
   { label: "+ 5.000", cents: 500_000 },
 ];
 
+// O número que decide um lance é o disponível; total e comprometido explicam de onde ele vem.
 function Balances({ wallet }: { wallet: WalletData }) {
+  const committedPct =
+    wallet.totalCents > 0 ? Math.min(100, Math.max(0, Math.round((wallet.committedCents / wallet.totalCents) * 100))) : 0;
   return (
-    <div className="wallet__balances">
-      <div className="balance-card">
-        <span className="t-overline text-secondary">Saldo total</span>
-        <span className="t-number-l num">{formatMoney(wallet.totalCents)}</span>
-        <span className="t-body-s">Soma de todos os lançamentos</span>
+    <section className="balances" aria-label="Saldos">
+      <div className="balances__main">
+        <span className="t-overline text-secondary">Disponível para lances</span>
+        <span className="t-number-xl num balances__available">{formatMoney(wallet.availableCents)}</span>
       </div>
-      <div className="balance-card balance-card--committed">
-        <span className="t-overline">Comprometido</span>
-        <span className="t-number-l num">{formatMoney(wallet.committedCents)}</span>
-        <span className="t-body-s">Reservado em lotes onde você lidera. Indisponível para novos lances.</span>
+
+      <div
+        className="balances__bar"
+        role="img"
+        aria-label={`${committedPct}% do saldo total está comprometido em lotes onde você lidera`}
+      >
+        <span className="balances__bar-fill" style={{ width: `${committedPct}%` }} />
       </div>
-      <div className="balance-card balance-card--available">
-        <span className="t-overline">Disponível</span>
-        <span className="t-number-l num">{formatMoney(wallet.availableCents)}</span>
-        <span className="t-body-s">Total − comprometido. É o que vale para novos lances.</span>
-      </div>
-    </div>
+
+      <dl className="balances__equation">
+        <div>
+          <dt className="t-overline text-secondary">Saldo total</dt>
+          <dd className="t-number-m num">{formatMoney(wallet.totalCents)}</dd>
+        </div>
+        <div>
+          <dt className="t-overline text-secondary">Comprometido</dt>
+          <dd className="t-number-m num balances__committed">{formatMoney(wallet.committedCents)}</dd>
+        </div>
+      </dl>
+
+      <p className="t-caption text-secondary">
+        Disponível = total − comprometido. O comprometido é o que você lidera em lotes abertos e volta na hora se alguém
+        cobrir seu lance.
+      </p>
+    </section>
   );
 }
 
@@ -188,15 +205,12 @@ export function Wallet() {
   return (
     <div className="container wallet">
       <header className="wallet__title">
-        <p className="t-overline text-secondary">Sua conta</p>
         <h1 className="t-display-l">Carteira</h1>
       </header>
 
       {query.isPending ? (
-        <div className="wallet__balances" aria-busy="true">
-          <Skeleton style={{ height: 130 }} />
-          <Skeleton style={{ height: 130 }} />
-          <Skeleton style={{ height: 130 }} />
+        <div aria-busy="true">
+          <Skeleton style={{ height: 170 }} />
         </div>
       ) : query.isError ? (
         <ErrorState title="Não foi possível carregar a carteira" onRetry={() => void query.refetch()}>
