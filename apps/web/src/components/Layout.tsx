@@ -195,8 +195,9 @@ function TabBar() {
 }
 
 export function Layout() {
+  const { user } = useAuth();
   return (
-    <div className="app">
+    <div className={user ? "app app--with-tabs" : "app"}>
       <a href="#conteudo" className="skip-link t-label-m">
         Ir para o conteúdo
       </a>

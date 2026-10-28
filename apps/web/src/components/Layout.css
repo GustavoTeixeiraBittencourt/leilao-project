@@ -1,5 +1,7 @@
 .app {
   min-height: 100vh;
+  /* No celular, 100vh inclui a barra do navegador e criava rolagem sobrando; dvh usa a área visível. */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -154,6 +156,7 @@
   .tab-bar__tab.active { color: var(--color-brand-primary); }
   .tab-bar__tab.active .tab-bar__indicator { background: var(--color-brand-primary); }
 
-  /* Reserva espaço para a barra fixa não cobrir o rodapé. */
-  .app { padding-bottom: var(--tabbar-height); }
+  /* A barra de abas só existe para quem está logado. Nesse caso o próprio rodapé escuro ganha
+     o espaço da barra (que fica por cima dele); sem barra, nada sobra abaixo do rodapé. */
+  .app--with-tabs .site-footer { padding-bottom: var(--tabbar-height); }
 }
