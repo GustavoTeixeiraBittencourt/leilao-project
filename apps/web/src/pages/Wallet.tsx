@@ -244,9 +244,10 @@ export function Wallet() {
         </ErrorState>
       ) : (
         <>
-          <Balances wallet={query.data} />
+          {/* Ordem no DOM = ordem no celular (saldos, depósito, extrato). No desktop o CSS põe o depósito
+              ao lado dos saldos, na linha de cima, e o extrato embaixo dos saldos. */}
           <div className="wallet__columns">
-            <Statement wallet={query.data} />
+            <Balances wallet={query.data} />
             {isBidder ? (
               <DepositPanel />
             ) : (
@@ -257,6 +258,7 @@ export function Wallet() {
                 </p>
               </aside>
             )}
+            <Statement wallet={query.data} />
           </div>
         </>
       )}
