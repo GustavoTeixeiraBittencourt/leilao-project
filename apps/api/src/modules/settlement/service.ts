@@ -123,11 +123,29 @@ export async function settleLot(lotId: string): Promise<SettlementResult | null>
   return result;
 }
 
+// Erro ao liquidar um lote específico já escolhido pelo worker. Leva o id para
+// o tick poder pular esse lote e seguir com os outros.
+export class DueLotError extends Error {
+  constructor(
+    readonly lotId: string,
+    cause: unknown,
+  ) {
+    super(`Failed to settle lot ${lotId}`, { cause });
+  }
+}
+
 // Pega o próximo lote vencido que ninguém está segurando e o liquida.
-export async function settleNextDueLot(): Promise<SettlementResult | null> {
+// `skipIds`: lotes que já falharam neste tick (ver pickDueLot).
+export async function settleNextDueLot(skipIds: string[] = []): Promise<SettlementResult | null> {
   const result = await prisma.$transaction(async (tx) => {
-    const lot = await pickDueLot(tx);
-    return lot ? settleLocked(tx, lot) : null;
+    const lot = await pickDueLot(tx, skipIds);
+    if (!lot) return null;
+    try {
+      return await settleLocked(tx, lot);
+    } catch (error) {
+      // Relança dentro da transação: o rollback acontece, e o chamador fica sabendo qual lote falhou.
+      throw new DueLotError(lot.id, error);
+    }
   }, TX_OPTIONS);
   if (result) announce(result);
   return result;
@@ -135,13 +153,24 @@ export async function settleNextDueLot(): Promise<SettlementResult | null> {
 
 // Um tick do worker: esvazia a fila de vencidos (com teto, para um backlog
 // grande não monopolizar o processo). Cada lote em transação própria: um lote
-// com problema não impede os demais.
-export async function closeDueLots(limit = 50): Promise<number> {
+// com problema é pulado NESTE tick (e reportado em `onFailure`) e não impede
+// os demais. No próximo tick ele é tentado de novo.
+export async function closeDueLots(
+  limit = 50,
+  onFailure?: (lotId: string, error: unknown) => void,
+): Promise<number> {
   let closed = 0;
-  while (closed < limit) {
-    const result = await settleNextDueLot();
-    if (!result) break;
-    closed += 1;
+  const failed: string[] = [];
+  while (closed + failed.length < limit) {
+    try {
+      const result = await settleNextDueLot(failed);
+      if (!result) break;
+      closed += 1;
+    } catch (error) {
+      if (!(error instanceof DueLotError)) throw error;
+      failed.push(error.lotId);
+      onFailure?.(error.lotId, error.cause);
+    }
   }
   return closed;
 }

@@ -41,12 +41,16 @@ export async function lockLot(tx: DbClient, lotId: string): Promise<LockedLot | 
 // o fechamento preguiçoso de uma leitura) nunca disputam o mesmo lote nem
 // esperam um pelo outro. O lock devolvido é o mesmo de lockLot: quem chama
 // segue a ordem lote -> licitante normalmente.
-export async function pickDueLot(tx: DbClient): Promise<LockedLot | null> {
+// `skipIds`: lotes que já falharam neste tick. Sem isso, um lote que dá erro
+// (rollback, continua aberto e vencido) seria sempre o primeiro do ORDER BY e
+// travaria o fechamento de todos os mais novos.
+export async function pickDueLot(tx: DbClient, skipIds: string[] = []): Promise<LockedLot | null> {
   const rows = await tx.$queryRaw`
     SELECT id, auctioneer_id, status, starting_bid_cents, min_increment_cents,
            starts_at, ends_at, current_bid_cents, leader_id, bid_count
     FROM lots
     WHERE status = 'open' AND ends_at <= clock_timestamp()
+      AND NOT (id = ANY(${skipIds}::uuid[]))
     ORDER BY ends_at
     LIMIT 1
     FOR UPDATE SKIP LOCKED`;

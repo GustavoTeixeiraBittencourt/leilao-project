@@ -155,6 +155,35 @@ describe("settlement", () => {
     });
   });
 
+  describe("a lot that fails to settle", () => {
+    it("is skipped and does not block newer due lots", async () => {
+      const auctioneer = await createUser("auctioneer");
+      // Invariante quebrada de propósito: o lote diz ter 1 lance, mas a cadeia está vazia.
+      // Vence em 2000, então seria SEMPRE o primeiro do ORDER BY ends_at.
+      const poison = await createLotRow({ auctioneerId: auctioneer.id });
+      await prisma.lot.update({
+        where: { id: poison.id },
+        data: { bidCount: 1, startsAt: new Date("1999-01-01"), endsAt: new Date("2000-01-01") },
+      });
+
+      const lot = await createLotRow({ auctioneerId: auctioneer.id });
+      const { token } = await newBidder();
+      await bid(token, lot.id, 10_000);
+      await expire(lot.id);
+
+      const failures: string[] = [];
+      try {
+        await closeDueLots(50, (lotId) => failures.push(lotId));
+
+        expect((await prisma.lot.findUniqueOrThrow({ where: { id: lot.id } })).status).toBe("closed");
+        expect((await prisma.lot.findUniqueOrThrow({ where: { id: poison.id } })).status).toBe("open");
+        expect(failures).toContain(poison.id);
+      } finally {
+        await prisma.lot.delete({ where: { id: poison.id } });
+      }
+    });
+  });
+
   describe("idempotency", () => {
     it("settles exactly once even with many simultaneous attempts", async () => {
       const auctioneer = await createUser("auctioneer");

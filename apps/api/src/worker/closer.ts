@@ -19,7 +19,9 @@ export function startCloser(options: { intervalMs: number; logger: Logger }): Cl
 
   const tick = async () => {
     try {
-      const closed = await closeDueLots();
+      const closed = await closeDueLots(undefined, (lotId, err) =>
+        logger.error({ err, lotId }, "closer: lot skipped, settlement failed"),
+      );
       if (closed > 0) logger.info({ closed }, "closer: settled due lots");
     } catch (error) {
       // Nunca deixar o loop morrer: o próximo tick tenta de novo.
