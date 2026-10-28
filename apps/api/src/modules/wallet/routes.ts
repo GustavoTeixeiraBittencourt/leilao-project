@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { depositSchema } from "./schemas.js";
-import { deposit, getBalance, getStatement, type WalletBalance } from "./service.js";
+import { deposit, getBalance, getBidActivity, getStatement, type WalletBalance } from "./service.js";
 import { prisma } from "../../db/client.js";
 
 // BigInt -> number só aqui, na borda da API (JSON.stringify não serializa
@@ -19,7 +19,11 @@ export async function walletRoutes(app: FastifyInstance) {
   // leitura vale para qualquer papel; só o depósito é exclusivo do licitante.
   app.get("/wallet", { preHandler: app.authenticate }, async (request) => {
     const userId = request.user.sub;
-    const [balance, entries] = await Promise.all([getBalance(prisma, userId), getStatement(userId)]);
+    const [balance, entries, bids] = await Promise.all([
+      getBalance(prisma, userId),
+      getStatement(userId),
+      getBidActivity(userId),
+    ]);
     return {
       ...balanceDto(balance),
       entries: entries.map((entry) => ({
@@ -28,6 +32,15 @@ export async function walletRoutes(app: FastifyInstance) {
         amountCents: Number(entry.amountCents),
         lotId: entry.lotId,
         createdAt: entry.createdAt.toISOString(),
+      })),
+      // Lances do próprio usuário, para o extrato. Informativo: não entra no total (ver service).
+      bids: bids.map((bid) => ({
+        id: bid.id,
+        lotId: bid.lotId,
+        lotTitle: bid.lotTitle,
+        amountCents: Number(bid.amountCents),
+        placedAt: bid.placedAt.toISOString(),
+        status: bid.status,
       })),
       serverNow: new Date().toISOString(),
     };
