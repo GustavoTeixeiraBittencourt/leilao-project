@@ -155,5 +155,5 @@
   .tab-bar__tab.active .tab-bar__indicator { background: var(--color-brand-primary); }
 
   /* Reserva espaço para a barra fixa não cobrir o rodapé. */
-  .app { padding-bottom: 65px; }
+  .app { padding-bottom: var(--tabbar-height); }
 }

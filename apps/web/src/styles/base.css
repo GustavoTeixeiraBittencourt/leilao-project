@@ -28,6 +28,20 @@ p {
   margin: 0;
 }
 
+/* Títulos sem órfãs; parágrafos sem última linha com uma palavra só; leitura com medida confortável. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+p {
+  text-wrap: pretty;
+}
+.t-body-l,
+.t-body-m {
+  max-width: 65ch;
+}
+
 img {
   display: block;
   max-width: 100%;
@@ -36,6 +50,20 @@ img {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* Link no meio de uma frase (sem classe própria) precisa parecer link: cor da marca + sublinhado. */
+p a:not([class]),
+.empty-state a:not([class]),
+.notice a:not([class]) {
+  color: var(--color-brand-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+p a:not([class]):hover,
+.empty-state a:not([class]):hover,
+.notice a:not([class]):hover {
+  color: var(--color-brand-primary-hover);
 }
 
 button,
@@ -103,4 +131,9 @@ textarea {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Título de página no mobile: um único degrau, em vez de um override por página. */
+@media (max-width: 767px) {
+  .t-display-l { font: 400 40px/46px var(--font-display); letter-spacing: 0; }
 }

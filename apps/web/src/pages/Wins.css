@@ -13,14 +13,6 @@
 .win__info { display: flex; flex: 1; flex-direction: column; gap: var(--space-1); min-width: 0; }
 .win__title { overflow-wrap: anywhere; }
 .win__amount { display: flex; flex: none; flex-direction: column; align-items: flex-end; gap: var(--space-1); }
-.win__settled {
-  flex: none;
-  padding: var(--space-1) var(--space-3);
-  background: var(--color-success-bg);
-  border-radius: var(--radius-full);
-  color: var(--color-success-fg);
-  white-space: nowrap;
-}
 .win__actions { display: flex; flex: none; flex-direction: column; align-items: stretch; gap: var(--space-2); width: 200px; }
 /* "Copiar link" é ação de baixa ênfase (terciária no Figma): texto na cor da marca, sem borda. */
 .win__copy { border-color: transparent; background: none; color: var(--color-brand-primary); }
@@ -33,10 +25,8 @@
 }
 @media (max-width: 767px) {
   .wins { gap: var(--space-4); padding-block: var(--space-6) var(--space-12); }
-  .wins .t-display-l { font: 400 40px/46px var(--font-display); letter-spacing: 0; }
   .win { flex-direction: column; align-items: stretch; }
   .win__image { width: 100%; height: 200px; }
   .win__amount { align-items: flex-start; }
-  .win__settled { align-self: flex-start; }
   .win__actions { width: 100%; }
 }

@@ -12,7 +12,6 @@
 
 @media (max-width: 767px) {
   .audit-index { padding-block: var(--space-6) var(--space-12); }
-  .audit-index .t-display-l { font: 400 40px/46px var(--font-display); letter-spacing: 0; }
   .audit-lot { flex-wrap: wrap; }
   .audit-lot__go { display: none; }
 }

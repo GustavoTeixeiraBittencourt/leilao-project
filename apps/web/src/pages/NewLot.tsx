@@ -11,6 +11,7 @@ import { Button } from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Notice } from "../ui/Notice";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
+import "../ui/Toast.css";
 import "./NewLot.css";
 
 const MIN_QUERY = 2; // o servidor exige pelo menos 2 caracteres
@@ -60,7 +61,7 @@ function SearchPanel({ selected, onSelect }: { selected: Artwork | null; onSelec
         1 · Buscar obra no acervo
       </h2>
       <p className="t-body-s text-secondary">
-        A busca consulta a API pública do Art Institute of Chicago. Ela pode ficar indisponível sem afetar lotes já
+        A busca consulta a API pública do Cleveland Museum of Art. Ela pode ficar indisponível sem afetar lotes já
         criados.
       </p>
 
@@ -287,7 +288,6 @@ export function NewLot() {
   return (
     <div className="container new-lot">
       <header className="new-lot__head">
-        <p className="t-overline text-secondary">Painel do leiloeiro</p>
         <h1 className="t-display-l">Novo lote</h1>
       </header>
       <div className="new-lot__columns">

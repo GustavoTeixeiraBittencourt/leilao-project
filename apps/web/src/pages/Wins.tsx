@@ -25,7 +25,6 @@ function WinRow({ win, copy, onCopy }: { win: Win; copy: CopyState; onCopy: (win
         <span className="t-overline text-secondary">Valor final</span>
         <span className="t-number-m num">{formatMoney(win.amountCents)}</span>
       </div>
-      <span className="win__settled t-label-s">✓ Liquidado</span>
       <div className="win__actions">
         <ButtonLink to={`/r/${win.receiptToken}`} variant="secondary">
           Ver comprovante

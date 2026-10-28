@@ -61,7 +61,7 @@
 .audit-table td { padding: var(--space-3) var(--space-4); }
 .audit-table tbody tr:nth-child(even) { background: var(--color-bg-subtle); }
 .audit-table__num { text-align: right !important; white-space: nowrap; }
-.audit-table__hash { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+.audit-table__hash { font-family: var(--font-mono); }
 
 /* O estado nunca depende só da cor: cada linha tem símbolo + texto (✓ / × / !). */
 .audit-table tbody tr.audit-row--break { background: var(--color-danger-bg); }
@@ -90,6 +90,5 @@
   .audit { gap: var(--space-4); padding-block: var(--space-6) var(--space-12); }
   .audit__lot { flex-direction: column; align-items: stretch; }
   .audit__image { width: 100%; height: 200px; }
-  .audit .t-display-l { font: 400 40px/46px var(--font-display); letter-spacing: 0; }
   .verdict { padding: var(--space-4); }
 }

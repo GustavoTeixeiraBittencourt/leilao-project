@@ -13,7 +13,7 @@
 
   /* Texto */
   --color-text-primary: #24251f;
-  --color-text-secondary: #6b6a5f;
+  --color-text-secondary: #5f5e53;
   --color-text-inverse: #f5f1e8;
   --color-text-on-brand: #ffffff;
 
@@ -60,8 +60,10 @@
   /* Tipografia */
   --font-display: "DM Serif Display", Georgia, serif;
   --font-ui: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
   /* Layout (grid do Figma: desktop 12 col, margem 64, largura máx. 1312) */
+  --tabbar-height: 65px;
   --layout-max: 1312px;
   --layout-margin: var(--space-16);
   --layout-gutter: var(--space-6);
