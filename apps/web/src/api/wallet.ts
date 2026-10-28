@@ -10,11 +10,24 @@ export type WalletEntry = {
   createdAt: string;
 };
 
+// Situação de um lance meu. Não é lançamento do ledger: lance só reserva valor.
+export type WalletBidStatus = "leading" | "outbid" | "won";
+
+export type WalletBid = {
+  id: string;
+  lotId: string;
+  lotTitle: string;
+  amountCents: number;
+  placedAt: string;
+  status: WalletBidStatus;
+};
+
 export type Wallet = {
   totalCents: number;
   committedCents: number;
   availableCents: number;
   entries: WalletEntry[];
+  bids: WalletBid[];
   serverNow: string;
 };
 
@@ -25,7 +38,7 @@ export function fetchWallet() {
 }
 
 export function deposit(amountCents: number) {
-  return apiFetch<Omit<Wallet, "entries">>("/wallet/deposit", {
+  return apiFetch<Omit<Wallet, "entries" | "bids">>("/wallet/deposit", {
     method: "POST",
     body: JSON.stringify({ amountCents }),
   });

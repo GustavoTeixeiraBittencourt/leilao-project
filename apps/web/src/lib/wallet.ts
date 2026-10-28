@@ -1,4 +1,4 @@
-import type { WalletEntryKind } from "../api/wallet";
+import type { WalletBid, WalletBidStatus, WalletEntry, WalletEntryKind } from "../api/wallet";
 import { formatMoney } from "./format";
 import { centsToInput, parseMoneyToCents } from "./money";
 
@@ -34,6 +34,35 @@ const KIND_LABEL: Record<WalletEntryKind, string> = {
 
 export function entryLabel(kind: WalletEntryKind): string {
   return KIND_LABEL[kind];
+}
+
+// ---- Extrato: lançamentos do ledger + meus lances ----
+
+export type StatementRow =
+  | { type: "entry"; key: string; at: string; entry: WalletEntry }
+  | { type: "bid"; key: string; at: string; bid: WalletBid };
+
+// Junta os lançamentos do ledger e os lances numa lista só, do mais novo para o mais antigo.
+// Os lances NÃO são lançamentos: ficam só na exibição, o saldo vem do ledger. Em empate de
+// horário o lançamento vem primeiro (a liquidação sempre acontece depois do último lance).
+export function buildStatement(entries: WalletEntry[], bids: WalletBid[], limit = 50): StatementRow[] {
+  const rows: StatementRow[] = [
+    ...entries.map((entry) => ({ type: "entry" as const, key: `entry-${entry.id}`, at: entry.createdAt, entry })),
+    ...bids.map((bid) => ({ type: "bid" as const, key: `bid-${bid.id}`, at: bid.placedAt, bid })),
+  ];
+  return rows
+    .sort((a, b) => Date.parse(b.at) - Date.parse(a.at) || (a.type === b.type ? 0 : a.type === "entry" ? -1 : 1))
+    .slice(0, limit);
+}
+
+const BID_STATUS_LABEL: Record<WalletBidStatus, string> = {
+  leading: "Liderando · valor reservado",
+  outbid: "Superado · valor devolvido",
+  won: "Arrematado · veja o débito",
+};
+
+export function bidStatusLabel(status: WalletBidStatus): string {
+  return BID_STATUS_LABEL[status];
 }
 
 // "+ US$ 5.000,00" / "− US$ 1.150,00": o sinal vem do valor assinado do ledger.

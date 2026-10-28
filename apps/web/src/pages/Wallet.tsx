@@ -5,7 +5,15 @@ import { deposit, fetchWallet, walletQueryKey, type Wallet as WalletData } from 
 import { useAuth } from "../hooks/useAuth";
 import { describeError } from "../lib/errors";
 import { formatDateTime, formatMoney, lotCode } from "../lib/format";
-import { addToAmount, checkDeposit, entryLabel, formatSigned, MAX_DEPOSIT_CENTS } from "../lib/wallet";
+import {
+  addToAmount,
+  bidStatusLabel,
+  buildStatement,
+  checkDeposit,
+  entryLabel,
+  formatSigned,
+  MAX_DEPOSIT_CENTS,
+} from "../lib/wallet";
 import { Button } from "../ui/Button";
 import { MoneyInput } from "../ui/MoneyInput";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
@@ -57,14 +65,16 @@ function Balances({ wallet }: { wallet: WalletData }) {
 }
 
 function Statement({ wallet }: { wallet: WalletData }) {
+  // Lançamentos do ledger + meus lances, do mais novo para o mais antigo.
+  const rows = buildStatement(wallet.entries, wallet.bids ?? []);
   return (
     <section className="wallet__statement" aria-labelledby="statement-title">
       <h2 id="statement-title" className="t-h2">
         Movimentações
       </h2>
 
-      {wallet.entries.length === 0 ? (
-        <EmptyState title="Nenhuma movimentação ainda">Os depósitos e as liquidações dos lotes aparecem aqui.</EmptyState>
+      {rows.length === 0 ? (
+        <EmptyState title="Nenhuma movimentação ainda">Depósitos, lances e as liquidações dos lotes aparecem aqui.</EmptyState>
       ) : (
         <div className="statement__wrap">
           <table className="statement__table">
@@ -77,32 +87,50 @@ function Statement({ wallet }: { wallet: WalletData }) {
               </tr>
             </thead>
             <tbody>
-              {wallet.entries.map((entry) => (
-                <tr key={entry.id}>
-                  <td className="t-body-s text-secondary num">{formatDateTime(entry.createdAt)}</td>
-                  <td className="t-label-m">{entryLabel(entry.kind)}</td>
-                  <td className="statement__lot t-body-s text-secondary">
-                    {entry.lotId ? (
-                      <Link to={`/lots/${entry.lotId}`} className="statement__link">
-                        Lote nº {lotCode(entry.lotId)}
+              {rows.map((row) =>
+                row.type === "bid" ? (
+                  <tr key={row.key} className="statement__row--bid">
+                    <td className="t-body-s text-secondary num">{formatDateTime(row.bid.placedAt)}</td>
+                    <td className="statement__what">
+                      <Link to={`/lots/${row.bid.lotId}`} className="statement__link t-label-m">
+                        Lance · {row.bid.lotTitle}
                       </Link>
-                    ) : (
-                      "—"
-                    )}
-                  </td>
-                  <td className={`statement__num t-label-m num ${entry.amountCents > 0 ? "statement__num--in" : ""}`}>
-                    {formatSigned(entry.amountCents)}
-                  </td>
-                </tr>
-              ))}
+                      <span className={`statement__status statement__status--${row.bid.status} t-caption`}>
+                        {bidStatusLabel(row.bid.status)}
+                      </span>
+                    </td>
+                    <td className="statement__lot t-body-s text-secondary">Lote nº {lotCode(row.bid.lotId)}</td>
+                    {/* Sem sinal e em âmbar: lance reserva valor, não tira do saldo total. */}
+                    <td className="statement__num statement__num--bid t-label-m num">{formatMoney(row.bid.amountCents)}</td>
+                  </tr>
+                ) : (
+                  <tr key={row.key}>
+                    <td className="t-body-s text-secondary num">{formatDateTime(row.entry.createdAt)}</td>
+                    <td className="statement__what t-label-m">{entryLabel(row.entry.kind)}</td>
+                    <td className="statement__lot t-body-s text-secondary">
+                      {row.entry.lotId ? (
+                        <Link to={`/lots/${row.entry.lotId}`} className="statement__link">
+                          Lote nº {lotCode(row.entry.lotId)}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className={`statement__num t-label-m num ${row.entry.amountCents > 0 ? "statement__num--in" : ""}`}>
+                      {formatSigned(row.entry.amountCents)}
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>
       )}
 
       <p className="t-caption text-secondary">
-        O extrato é um registro somente de acréscimo: lançamentos não são editados nem apagados. O comprometido não
-        aparece aqui porque é derivado dos lotes em que você lidera. Mostra os 50 lançamentos mais recentes.
+        Depósitos e liquidações são o registro oficial do saldo: somente acréscimo, nunca editados nem apagados. Os lances,
+        em âmbar, são informativos e não alteram o saldo total: o valor fica reservado enquanto você lidera e volta
+        se alguém cobrir. Mostra as 50 linhas mais recentes.
       </p>
     </section>
   );

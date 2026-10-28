@@ -22,6 +22,10 @@
 .statement__table tbody tr:nth-child(even) { background: var(--color-bg-subtle); }
 .statement__num { text-align: right !important; white-space: nowrap; }
 .statement__num--in { color: var(--color-success-fg); }
+.statement__num--bid { color: var(--color-warning-fg); }
+.statement__what { min-width: 200px; overflow-wrap: anywhere; }
+.statement__status { display: block; color: var(--color-text-secondary); }
+.statement__status--leading { color: var(--color-warning-fg); }
 .statement__lot { white-space: nowrap; }
 .statement__link { text-decoration: underline; }
 
