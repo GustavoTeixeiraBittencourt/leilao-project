@@ -1,6 +1,6 @@
 # Uso de IA neste projeto
 
-utilzei a IA para atuar como Engenheiro de software sênior (staff), par técnico do usuário. Trabalhar como em time real:
+A IA foi utilizada neste projeto para atuar como Engenheiro de software sênior (staff) agindo no formato de par técnico do usuário. Trabalhar como em time real:
 planejar antes de codar,testes E2E/integração onde há risco de regra de negócio, avisar sobre trade-offs relevantes.
 
 
