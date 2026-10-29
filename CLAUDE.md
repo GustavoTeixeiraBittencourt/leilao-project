@@ -22,7 +22,7 @@ testes E2E/integração onde há risco de regra de negócio, avisar sobre trade-
 
 - Empresa: Verzel (processo Elite Dev).
 - Prazo oficial: quinta-feira **29/10/2026**. Meta real (buffer de segurança): quarta **28/10/2026** à noite.
-- Hoje: sábado **24/10/2026**.
+- Entrega: **29/10/2026** (dia do prazo oficial). Depois da entrega não pode haver commit.
 - Entregáveis obrigatórios: repositório público no GitHub, **deploy público** no ar, README
   detalhado, dados de seed, relato de uso de IA (preenchido a partir de `AI_USAGE.md`).
 
@@ -83,7 +83,9 @@ Nota fiscal, revenda, app nativo, recuperação de senha.
   SQL customizado anexado à migration inicial (`prisma migrate dev --create-only` + edição manual
   antes de aplicar). Todo SQL cru do projeto (`FOR UPDATE`, `FOR UPDATE SKIP LOCKED`) fica
   concentrado em `src/db/locks.ts`, com o retorno do `$queryRaw` tipado via Zod.
-- **Tempo real**: SSE com pub/sub em memória (instância única — limitação documentada).
+- **Tempo real**: SSE com pub/sub em memória (instância única — limitação documentada). Não é WebSocket, de propósito (fluxo só servidor → navegador).
+- **Documentação da API**: Swagger em `/docs` (JSON em `/docs/json`), OpenAPI escrita à mão em
+  `apps/api/src/docs/openapi.ts`; os corpos vêm dos schemas Zod. **Rota nova = acrescentar ali.**
 - **Auth**: e-mail + senha (argon2/bcrypt), JWT (cookie httpOnly ou Bearer); papel no token E
   revalidado no servidor.
 - **Testes**: Vitest.
@@ -232,8 +234,8 @@ Seed obrigatório: 1 leiloeiro, 2 licitantes (com saldo), ≥1 lote ao vivo com 
 **Contas de teste** (senha `demo12345`): `licitante1@demo.com` (US$ 50.000),
 `licitante2@demo.com` (US$ 30.000), `leiloeiro@demo.com`.
 
-**Testes automatizados**: `pnpm --filter @leilao/api test` (128, exigem o Postgres no ar),
-`pnpm --filter @leilao/web test` (126), `pnpm lint`. Os testes da API não limpam o que criam;
+**Testes automatizados**: `pnpm --filter @leilao/api test` (162, exigem o Postgres no ar),
+`pnpm --filter @leilao/web test` (175), `pnpm lint`. Os testes da API não limpam o que criam;
 o seed limpa tudo.
 
 **Roteiro manual da Vitrine/acesso**: abas com contagem, busca (`piranesi`, depois `zzzz` para o
@@ -258,16 +260,24 @@ Docker: `docker compose up --build -d` sobe tudo (ver README).
 - Nunca gravar credenciais do Render (DATABASE_URL, AUDIT_SECRET) em arquivos; usar só variáveis
   de ambiente do comando.
 
-## 10. Estado atual (27/10/2026)
+## 10. Estado atual (29/10/2026, dia da entrega)
 
-- Deploy no ar (versão anterior): API https://leilao-api-4ogr.onrender.com, front
-  https://leilao-project-seven.vercel.app. **Falta publicar a versão nova** (push + redeploy + re-seed).
-- Backend completo (Etapas 1–3 + Parte A da 4). Front completo (Parte B): Vitrine, login/cadastro,
-  Sala do lote (SSE), Carteira, Meus arremates, Comprovante, Auditoria, Painel do leiloeiro e Novo lote.
-- Docker Compose completo (db + api + web), README final e docs da Parte B escritos.
-- Commits locais ainda NÃO enviados ao remoto (push só com confirmação do usuário).
-- Pendente: conferência VISUAL pelo usuário (nenhuma tela foi aberta em navegador pelo Claude: a
-  automação de Chrome não estava disponível), push, deploy final e re-seed perto da avaliação.
+- Código **commitado e enviado** à `main` (último: `316c288` + este). Deploy: API https://leilao-api-4ogr.onrender.com
+  (Swagger em `/docs`), front https://leilao-project-seven.vercel.app. Conferir que o Render e a Vercel
+  publicaram o commit mais recente antes de testar.
+- Tudo o que o enunciado pede está implementado: Vitrine, login/cadastro, Sala do lote (SSE), Carteira, Meus
+  arremates, Comprovante, Auditoria pública, Painel do leiloeiro, Novo lote e Editar lote (`PATCH /lots/:id`, só
+  dono e sem lances). Opcionais feitos: busca/filtro, Docker Compose, testes (162 API + 175 front), Swagger.
+- Mobile: a barra de abas inferior saiu; o ☰ do header abre um menu lateral (`<dialog>`, `Layout.tsx`, itens por
+  papel em `lib/nav.ts`). A rota nova volta ao topo e cada rota define o título da aba.
+- **Fora de escopo por decisão** (em `DECISIONS.md` e no README): dark mode, PWA, internacionalização, testes
+  E2E de navegador, estorno de cancelamento (só cancela sem lances, então não há o que estornar).
+- Bug corrigido hoje: o front mandava `Content-Type: application/json` em POST sem corpo (cancelar lote) e a API
+  respondia 500. A API aceita corpo vazio e o front só declara JSON com corpo. Testar com os cabeçalhos reais do
+  navegador, não só `curl`.
+- **Pendente (só o usuário pode fazer)**: re-seed de produção (precisa da External Database URL e do `AUDIT_SECRET`
+  do Render, nunca em arquivo; comando no README §4 do Deploy), rodado por último para os lotes "ao vivo" não
+  vencerem; e a conferência VISUAL em navegador (nenhuma tela foi aberta pelo Claude).
 - Figma: fileKey `TcgIkTavwQ8L6p3pWLbtkb`; carregar a skill `figma-design-to-code` antes de
   `get_design_context` (se a skill não estiver listada, ler o recurso MCP
   `skill://figma/figma-design-to-code/SKILL.md`).
