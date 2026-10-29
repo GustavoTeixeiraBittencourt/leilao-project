@@ -7,9 +7,11 @@ import { safeRedirect } from "../../lib/redirect";
 import { Button } from "../../ui/Button";
 import { Field } from "../../ui/Field";
 import { Notice } from "../../ui/Notice";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import { AuthShell } from "./AuthShell";
 
 export function Login() {
+  usePageTitle("Entrar · ACERVO");
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

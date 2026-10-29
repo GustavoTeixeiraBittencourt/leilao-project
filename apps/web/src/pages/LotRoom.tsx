@@ -11,6 +11,7 @@ import { LotImage } from "../components/LotImage";
 import { useAuth } from "../hooks/useAuth";
 import { useLotStream, type StreamStatus } from "../hooks/useLotStream";
 import { useNow } from "../hooks/useNow";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { formatCountdown, remainingMs, serverNowMs } from "../lib/clock";
 import { describeError } from "../lib/errors";
 import { bidsLabel, firstLine, formatDayAt, formatMoney, lotCode } from "../lib/format";
@@ -183,6 +184,7 @@ export function LotRoom() {
   });
 
   const lot = lotQuery.data;
+  usePageTitle(lot ? `${lot.title} · ACERVO` : null);
   // Só vale abrir o stream enquanto o lote ainda pode mudar.
   const streamStatus = useLotStream(id, lot?.phase === "live" || lot?.phase === "scheduled");
 

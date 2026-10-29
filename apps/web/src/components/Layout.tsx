@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useId, useRef, useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigationType } from "react-router-dom";
 import { fetchWallet, walletQueryKey } from "../api/wallet";
 import type { Role } from "../api/auth";
 import { useAuth } from "../hooks/useAuth";
 import { formatMoney, initial } from "../lib/format";
+import { titleFor, usePageTitle } from "../hooks/usePageTitle";
 import { navItems } from "../lib/nav";
 import "./Layout.css";
 
@@ -244,9 +245,33 @@ function Footer() {
   );
 }
 
+// O SPA não recarrega a página, então o navegador mantém a rolagem da tela anterior (abrir um lote
+// no meio da vitrine caía no meio da sala). Ao trocar de rota, volta ao topo; no voltar/avançar
+// (POP) o navegador restaura a posição sozinho. Só o caminho conta: trocar aba/busca da vitrine
+// (parâmetros da URL) não pode jogar a página para cima.
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  const navigationType = useNavigationType();
+  useEffect(() => {
+    if (navigationType !== "POP") window.scrollTo(0, 0);
+  }, [pathname, navigationType]);
+  return null;
+}
+
+const BASE_TITLE = "ACERVO · Leilão Online";
+
+// Define o título da aba conforme a rota (a sala do lote define o próprio, com o nome da obra).
+function PageTitle() {
+  const { pathname } = useLocation();
+  usePageTitle(titleFor(pathname));
+  return null;
+}
+
 export function Layout() {
   return (
     <div className="app">
+      <ScrollToTop />
+      <PageTitle />
       <a href="#conteudo" className="skip-link t-label-m">
         Ir para o conteúdo
       </a>

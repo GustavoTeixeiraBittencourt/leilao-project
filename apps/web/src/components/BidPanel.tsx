@@ -133,7 +133,7 @@ export function BidPanel({ lot, standing, onBidPlaced }: BidPanelProps) {
       </div>
 
       {lot.phase === "scheduled" && (
-        <Notice tone="warning" title="Lote ainda não aberto">
+        <Notice tone="info" title="Lote ainda não aberto">
           Os lances começam em {formatDayAt(lot.startsAt)}. Você pode acompanhar a sala desde já.
         </Notice>
       )}
@@ -148,7 +148,7 @@ export function BidPanel({ lot, standing, onBidPlaced }: BidPanelProps) {
 
       {lot.phase === "live" && !user && (
         <>
-          <Notice tone="warning" title="Entre para dar lances">
+          <Notice tone="info" title="Entre para dar lances">
             Você precisa de uma conta de licitante para participar.
           </Notice>
           <ButtonLink to="/login" state={{ from: location.pathname }} className="bid-panel__submit">
@@ -245,7 +245,7 @@ export function BidPanel({ lot, standing, onBidPlaced }: BidPanelProps) {
 function EndedResult({ lot }: { lot: Lot }) {
   if (!lot.winnerAlias || lot.finalPriceCents === null) {
     return (
-      <Notice tone="warning" title="Encerrado sem lances">
+      <Notice tone="info" title="Encerrado sem lances">
         Este lote terminou sem receber nenhum lance e não teve vencedor.
       </Notice>
     );

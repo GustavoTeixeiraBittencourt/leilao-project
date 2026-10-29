@@ -8,6 +8,7 @@ import { safeRedirect } from "../../lib/redirect";
 import { Button } from "../../ui/Button";
 import { Field } from "../../ui/Field";
 import { Notice } from "../../ui/Notice";
+import { usePageTitle } from "../../hooks/usePageTitle";
 import { AuthShell } from "./AuthShell";
 import "./Signup.css";
 
@@ -29,6 +30,7 @@ const ROLES: { value: Role; title: string; description: string; submit: string }
 ];
 
 export function Signup() {
+  usePageTitle("Criar conta · ACERVO");
   const { user, signup } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -99,7 +101,7 @@ export function Signup() {
           ))}
         </fieldset>
 
-        <Notice tone="warning" icon="!">
+        <Notice tone="info" icon="i">
           O papel escolhido não pode ser trocado depois. Para usar o outro papel, crie outra conta com outro e-mail.
         </Notice>
 
