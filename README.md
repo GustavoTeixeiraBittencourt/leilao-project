@@ -1,4 +1,4 @@
-# Leilão Online — ACERVO
+# ACERVO - Leilão Online
 
 Casa de leilões online com obras do acervo aberto (CC0) do [Cleveland Museum of Art](https://openaccess-api.clevelandart.org/api/artworks/).
 Teste técnico (Verzel — Elite Dev).
