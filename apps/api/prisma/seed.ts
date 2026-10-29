@@ -134,19 +134,20 @@ async function main() {
   ];
 
   // --- Ao vivo, com lances ---
-  const live1 = await createLot(auctioneer.id, a0, { startsInMs: -2 * HOUR, endsInMs: 6 * HOUR, startingBidCents: 150_000, minIncrementCents: 10_000 });
+  const live1 = await createLot(auctioneer.id, a0, { startsInMs: -2 * HOUR, endsInMs: 14 * DAY, startingBidCents: 150_000, minIncrementCents: 10_000 });
   await bidUp(live1, 150_000, 10_000, pair, 5);
-  const live2 = await createLot(auctioneer.id, a1, { startsInMs: -1 * DAY, endsInMs: 2 * DAY, startingBidCents: 80_000, minIncrementCents: 5_000 });
+  const live2 = await createLot(auctioneer.id, a1, { startsInMs: -1 * DAY, endsInMs: 21 * DAY, startingBidCents: 80_000, minIncrementCents: 5_000 });
   await bidUp(live2, 80_000, 5_000, pair, 3);
-  // Termina em 20 min: bom para demonstrar a contagem regressiva e o anti-sniping.
-  const live3 = await createLot(auctioneer.id, a2, { startsInMs: -3 * HOUR, endsInMs: 20 * MINUTE, startingBidCents: 250_000, minIncrementCents: 25_000 });
+  // Prazos longos de propósito: não se sabe quando a avaliação vai olhar, e um lote ao vivo que vence em
+  // minutos some da vitrine. Para ver o encerramento e o anti-sniping, crie um lote curto pelo painel do leiloeiro.
+  const live3 = await createLot(auctioneer.id, a2, { startsInMs: -3 * HOUR, endsInMs: 30 * DAY, startingBidCents: 250_000, minIncrementCents: 25_000 });
   await bidUp(live3, 250_000, 25_000, pair, 2);
   // Ao vivo, ainda sem lances.
-  await createLot(auctioneer.id, a3, { startsInMs: -30 * MINUTE, endsInMs: 4 * DAY, startingBidCents: 60_000, minIncrementCents: 5_000 });
+  await createLot(auctioneer.id, a3, { startsInMs: -30 * MINUTE, endsInMs: 45 * DAY, startingBidCents: 60_000, minIncrementCents: 5_000 });
 
   // --- Agendados ---
-  await createLot(auctioneer.id, a4, { startsInMs: 2 * HOUR, endsInMs: 2 * DAY, startingBidCents: 120_000, minIncrementCents: 10_000 });
-  await createLot(auctioneer.id, a5, { startsInMs: 1 * DAY, endsInMs: 3 * DAY, startingBidCents: 300_000, minIncrementCents: 20_000 });
+  await createLot(auctioneer.id, a4, { startsInMs: 6 * DAY, endsInMs: 20 * DAY, startingBidCents: 120_000, minIncrementCents: 10_000 });
+  await createLot(auctioneer.id, a5, { startsInMs: 12 * DAY, endsInMs: 25 * DAY, startingBidCents: 300_000, minIncrementCents: 20_000 });
 
   // --- Encerrados, liquidados pelo código real ---
   const soldA = await createLot(auctioneer.id, a6, { startsInMs: -3 * HOUR, endsInMs: 1 * HOUR, startingBidCents: 90_000, minIncrementCents: 10_000 });
@@ -159,7 +160,7 @@ async function main() {
   await closeNow(unsold.id);
 
   // Um segundo lote sem lances, ao vivo, só para a vitrine não ficar com um único "vazio".
-  await createLot(auctioneer.id, a9, { startsInMs: -10 * MINUTE, endsInMs: 7 * DAY, startingBidCents: 40_000, minIncrementCents: 5_000 });
+  await createLot(auctioneer.id, a9, { startsInMs: -10 * MINUTE, endsInMs: 60 * DAY, startingBidCents: 40_000, minIncrementCents: 5_000 });
 
   // Conferência final: toda a cadeia que acabamos de gerar precisa fechar.
   const lots = await prisma.lot.findMany({ select: { id: true, title: true, status: true, endsAt: true, startsAt: true } });

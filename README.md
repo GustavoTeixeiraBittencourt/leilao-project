@@ -27,8 +27,10 @@ Senha de todas: **`demo12345`**
 
 O seed cria lotes ao vivo (com e sem lances), agendados e encerrados já liquidados (um arrematado,
 com comprovante, e um sem lances). Para ver um lote cancelado, crie e cancele um pelo painel do
-leiloeiro. Os horários dos lotes ao vivo são relativos a quando o seed rodou e **vencem com o tempo**:
-se a vitrine ficar vazia, rode o seed de novo (ver abaixo).
+leiloeiro. Os horários são relativos a quando o seed rodou: os lotes ao vivo duram de **14 a 60 dias** e os dois
+agendados abrem em cerca de **6 e 12 dias**, para a demonstração não esvaziar de um dia para o outro. Se a vitrine
+ficar vazia, rode o seed de novo (ver abaixo). Para ver **encerramento e anti-sniping** é preciso um lote curto: crie
+um pelo painel do leiloeiro com fim em poucos minutos (os 3 encerrados do seed já mostram a liquidação e o comprovante).
 
 ## O que o sistema faz
 
@@ -318,8 +320,8 @@ pnpm prisma:seed
 
 O seed **apaga todos os dados** (`TRUNCATE`); em `NODE_ENV=production` só roda com `ALLOW_SEED_RESET=1`. Ele
 passa pelo código real (`placeBid` → `settleLot`), então a auditoria dos lotes encerrados dá "íntegro", e
-audita tudo no final (falha se algo não fechar). **Rode de novo perto da avaliação**, porque os lotes ao
-vivo vencem com o tempo.
+audita tudo no final (falha se algo não fechar). Os lotes ao vivo duram semanas, mas ainda assim vencem:
+se a vitrine esvaziar, rode o seed de novo.
 
 ### 5. Verificação
 

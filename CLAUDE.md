@@ -254,7 +254,7 @@ lote sem lances. Mobile a 390 px: barra de lance fixa e folha na sala; tabela do
 Docker: `docker compose up --build -d` sobe tudo (ver README).
 
 **Atenção**
-- Os lotes "ao vivo" do seed vencem com o tempo (um em ~20 min); se a vitrine esvaziar, rode o seed de novo.
+- Os lotes "ao vivo" do seed duram de 14 a 60 dias; os agendados abrem em ~6 e ~12 dias. Se a vitrine esvaziar, rode o seed de novo.
 - Imagens IIIF do museu podem aparecer como "Imagem indisponível" (bloqueio Cloudflare/ORB visto
   em Chrome automatizado). Conferir no navegador real do usuário; o fallback já existe.
 - Nunca gravar credenciais do Render (DATABASE_URL, AUDIT_SECRET) em arquivos; usar só variáveis
