@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import "./Notice.css";
 
 type NoticeProps = {
-  tone: "danger" | "warning" | "success";
+  tone: "danger" | "warning" | "success" | "info";
   title?: string;
   children?: ReactNode;
   className?: string;

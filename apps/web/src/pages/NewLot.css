@@ -1,14 +1,13 @@
 .new-lot { display: flex; flex-direction: column; gap: var(--space-6); padding-block: var(--space-8) var(--space-16); }
+.new-lot__title { text-wrap: balance; }
 .new-lot__head { display: flex; flex-direction: column; gap: var(--space-1); }
 .new-lot__columns { display: grid; grid-template-columns: minmax(0, 1fr) 520px; gap: var(--space-12); align-items: start; }
 .new-lot__loading { display: flex; flex-direction: column; gap: var(--space-2); }
 .new-lot__link { text-decoration: underline; color: var(--color-brand-primary); }
 
 .new-lot__search { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
-.search-row { display: flex; align-items: flex-start; gap: var(--space-3); }
+.search-row { display: flex; align-items: flex-end; gap: var(--space-3); }
 .search-row .field { flex: 1; min-width: 0; }
-/* O botão alinha com o campo (que tem o rótulo acima): desce a altura do rótulo + folga. */
-.search-row__button { margin-top: 28px; }
 
 .new-lot__results { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: var(--space-2) 0 0; list-style: none; }
 .artwork {
@@ -54,7 +53,7 @@
   .config { padding: var(--space-4); }
   .config__row { flex-direction: column; }
   .search-row { flex-wrap: wrap; }
-  .search-row__button { margin-top: 0; width: 100%; }
+  .search-row > .btn { width: 100%; }
   .artwork { flex-wrap: wrap; }
   .artwork__image { width: 80px; height: 60px; }
 }

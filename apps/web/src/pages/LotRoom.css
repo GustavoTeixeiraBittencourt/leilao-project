@@ -53,21 +53,6 @@
 /* Botão único de auditoria: largura total da coluna lateral. */
 .room__audit { width: 100%; }
 
-/* Ficha da obra: título + tabela zebrada (Figma: rótulo de 160px). */
-.sheet { display: flex; flex-direction: column; gap: var(--space-3); }
-.attributes {
-  margin: 0;
-  background: var(--color-bg-surface);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-.attributes__row { display: flex; gap: var(--space-4); padding: var(--space-3) var(--space-4); }
-.attributes__row:nth-child(even) { background: var(--color-bg-subtle); }
-.attributes dt { flex: 0 0 160px; }
-/* pre-line: o artista vem do museu em duas linhas ("Nome" / "nacionalidade, anos"). */
-.attributes dd { margin: 0; flex: 1; min-width: 0; overflow-wrap: anywhere; white-space: pre-line; }
-
 /* Histórico */
 .history { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-3); width: 100%; }
 .history__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; width: 100%; }
@@ -99,7 +84,6 @@
   .room__image { height: 300px; }
   .room__h1 { font: 400 40px/46px var(--font-display); letter-spacing: 0; }
   .room__side { position: static; }
-  .attributes dt { flex-basis: 110px; }
 
   .room__panel--sheetable { display: none; }
   .room__panel--sheetable.room__panel--open {
@@ -121,7 +105,7 @@
   .room__sheet-head { position: relative; min-height: 20px; }
   .room__scrim { display: block; position: fixed; inset: 0; z-index: 55; background: var(--color-bg-inverse); opacity: 0.5; }
 
-  /* Barra fixa (Figma: Bid Bar). Com a barra de abas visível, ela fica logo acima. */
+  /* Barra fixa (Figma: Bid Bar). */
   .bid-bar {
     position: fixed;
     inset: auto 0 0 0;
@@ -134,7 +118,6 @@
     background: var(--color-bg-surface);
     border-top: 1px solid var(--color-border-default);
   }
-  .bid-bar--above-tabs { bottom: var(--tabbar-height); }
   .bid-bar__info { display: flex; flex-direction: column; min-width: 0; }
   .bid-bar__state { color: var(--color-success-fg); }
   .bid-bar__state--warn { color: var(--color-warning-fg); }

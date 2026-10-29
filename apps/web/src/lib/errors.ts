@@ -14,6 +14,7 @@ const MESSAGES: Record<string, string> = {
   // Leiloeiro
   LOT_HAS_BIDS: "Não é possível cancelar um lote que já recebeu lances.",
   LOT_NOT_CANCELLABLE: "Este lote não pode mais ser cancelado.",
+  LOT_NOT_EDITABLE: "Este lote não pode mais ser editado: ele já recebeu lances ou terminou.",
   // Conta e acesso
   INVALID_CREDENTIALS: "E-mail ou senha incorretos.",
   INVALID_CURRENT_PASSWORD: "A senha atual está incorreta.",

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { createLot, myAuctionsQueryKey, searchArtworks, type Artwork } from "../api/auctioneer";
 import { LotImage } from "../components/LotImage";
@@ -66,21 +66,29 @@ function SearchPanel({ selected, onSelect }: { selected: Artwork | null; onSelec
         criados.
       </p>
 
-      <form className="search-row" onSubmit={submit} noValidate>
-        <Field
-          label="Título ou artista"
-          value={text}
-          autoComplete="off"
-          hint="Ex.: Seurat, Monet, Hopper"
-          error={tooShort ? `Digite pelo menos ${MIN_QUERY} caracteres.` : undefined}
-          onChange={(event) => {
-            setText(event.target.value);
-            setTooShort(false);
-          }}
-        />
-        <Button type="submit" variant="secondary" loading={search.isPending} className="search-row__button">
-          Buscar
-        </Button>
+      <form onSubmit={submit} noValidate>
+        <div className="search-row">
+          <Field
+            label="Título ou artista"
+            value={text}
+            autoComplete="off"
+            invalid={tooShort}
+            onChange={(event) => {
+              setText(event.target.value);
+              setTooShort(false);
+            }}
+          />
+          <Button type="submit" variant="secondary" loading={search.isPending}>
+            Buscar
+          </Button>
+        </div>
+        {tooShort ? (
+          <p className="field__msg field__msg--error t-caption" role="alert">
+            Digite pelo menos {MIN_QUERY} caracteres.
+          </p>
+        ) : (
+          <p className="field__msg t-caption">Ex.: Seurat, Monet, Hopper</p>
+        )}
       </form>
 
       {search.isPending ? (
@@ -127,7 +135,7 @@ function SearchPanel({ selected, onSelect }: { selected: Artwork | null; onSelec
   );
 }
 
-function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
+function ConfigPanel({ artwork, onPublishAnother }: { artwork: Artwork | null; onPublishAnother: () => void }) {
   const queryClient = useQueryClient();
   const initialTimes = defaultLotTimes(serverNowMs());
   const [values, setValues] = useState<LotFormValues>({
@@ -139,8 +147,20 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
   const [errors, setErrors] = useState<LotFormErrors>({});
   const [published, setPublished] = useState<{ title: string; startsAt: string; live: boolean } | null>(null);
 
+  // O aviso de sucesso fica no fim do formulário: leva-o à vista (no mobile está abaixo da dobra).
+  const toastRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (published) toastRef.current?.scrollIntoView({ block: "nearest" });
+  }, [published]);
+
+  // Trava síncrona: cliques seguidos antes do re-render não chegam a disparar um segundo POST.
+  const sending = useRef(false);
+
   const publish = useMutation({
     mutationFn: createLot,
+    onSettled: () => {
+      sending.current = false;
+    },
     onSuccess: (result) => {
       setPublished({
         title: result.lot.title,
@@ -155,12 +175,11 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
   function set<K extends keyof LotFormValues>(key: K, value: string) {
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
-    setPublished(null);
   }
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!artwork) return;
+    if (!artwork || sending.current || published) return;
     // "Futuro" é decidido pelo relógio do SERVIDOR (o do navegador pode estar errado).
     const check = checkLotForm(values, serverNowMs());
     if (!check.ok) {
@@ -168,6 +187,7 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
       return;
     }
     setErrors({});
+    sending.current = true;
     publish.mutate({
       externalId: artwork.externalId,
       title: artwork.title,
@@ -205,6 +225,7 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
 
       <div className="config__row">
         <MoneyInput
+          disabled={!!published}
           label="Lance inicial (US$)"
           placeholder="4.000,00"
           value={values.startingBid}
@@ -213,6 +234,7 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
           onValueChange={(text) => set("startingBid", text)}
         />
         <MoneyInput
+          disabled={!!published}
           label="Incremento mínimo (US$)"
           placeholder="500,00"
           value={values.minIncrement}
@@ -223,6 +245,7 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
       </div>
       <div className="config__row">
         <Field
+          disabled={!!published}
           label="Início"
           type="datetime-local"
           value={values.startsAt}
@@ -231,6 +254,7 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
           onChange={(event) => set("startsAt", event.target.value)}
         />
         <Field
+          disabled={!!published}
           label="Encerramento"
           type="datetime-local"
           value={values.endsAt}
@@ -240,25 +264,41 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
         />
       </div>
 
-      <Notice tone="warning" icon="!">
-        Ao publicar, título, artista, imagem e atributos da obra são salvos neste lote. Depois disso, ele não depende
-        mais da API do acervo e esses dados não mudam.
-      </Notice>
+      {!published && (
+        <Notice tone="info" icon="i">
+          Ao publicar, título, artista, imagem e atributos da obra são salvos neste lote. Depois disso, ele não depende
+          mais da API do acervo e esses dados não mudam.
+        </Notice>
+      )}
 
       {publish.isError && <Notice tone="danger">{describeError(publish.error)}</Notice>}
 
-      <div className="config__actions">
-        <Button type="submit" loading={publish.isPending} disabled={!artwork} className="config__publish">
-          Publicar lote
-        </Button>
-        <Link to="/auctioneer" className="config__cancel t-label-m">
-          Cancelar
-        </Link>
-      </div>
-      {!artwork && <p className="t-caption text-secondary">Selecione uma obra para publicar.</p>}
+      {!published && (
+        <>
+          <div className="config__actions">
+            <Button
+              type="submit"
+              loading={publish.isPending}
+              disabled={!artwork}
+              aria-describedby={artwork ? undefined : "publish-hint"}
+              className="config__publish"
+            >
+              Publicar lote
+            </Button>
+            <Link to="/auctioneer" className="config__cancel t-label-m">
+              Cancelar
+            </Link>
+          </div>
+          {!artwork && (
+            <p id="publish-hint" className="t-caption text-secondary">
+              Selecione uma obra para publicar.
+            </p>
+          )}
+        </>
+      )}
 
       {published && (
-        <div className="toast" role="status">
+        <div className="toast" role="status" ref={toastRef}>
           <span className="toast__icon" aria-hidden="true">
             ✓
           </span>
@@ -272,6 +312,9 @@ function ConfigPanel({ artwork }: { artwork: Artwork | null }) {
                 Ver meus lotes
               </Link>
             </p>
+            <Button variant="secondary" size="sm" onClick={onPublishAnother}>
+              Publicar outro lote
+            </Button>
           </div>
         </div>
       )}
@@ -285,11 +328,11 @@ export function NewLot() {
   return (
     <div className="container new-lot">
       <header className="new-lot__head">
-        <h1 className="t-display-l">Novo lote</h1>
+        <h1 className="t-display-l new-lot__title">Novo lote</h1>
       </header>
       <div className="new-lot__columns">
         <SearchPanel selected={artwork} onSelect={setArtwork} />
-        <ConfigPanel artwork={artwork} />
+        <ConfigPanel key={artwork?.externalId ?? "none"} artwork={artwork} onPublishAnother={() => setArtwork(null)} />
       </div>
     </div>
   );

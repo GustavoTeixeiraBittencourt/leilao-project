@@ -4,6 +4,7 @@ import { RequireRole } from "./components/RequireRole";
 import { AuctioneerDashboard } from "./pages/AuctioneerDashboard";
 import { AuditIndex } from "./pages/AuditIndex";
 import { AuditLot } from "./pages/AuditLot";
+import { EditLot } from "./pages/EditLot";
 import { LotRoom } from "./pages/LotRoom";
 import { NewLot } from "./pages/NewLot";
 import { Login } from "./pages/auth/Login";
@@ -42,6 +43,14 @@ export const router = createBrowserRouter([
         element: (
           <RequireRole role="auctioneer">
             <AuctioneerDashboard />
+          </RequireRole>
+        ),
+      },
+      {
+        path: "/auctioneer/lots/:id/edit",
+        element: (
+          <RequireRole role="auctioneer">
+            <EditLot />
           </RequireRole>
         ),
       },

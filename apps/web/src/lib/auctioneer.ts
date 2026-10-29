@@ -40,8 +40,8 @@ export function resultText(lot: MyLot): string {
     case "live":
     case "scheduled":
       return lot.bidCount === 0
-        ? "Sem lances · pode ser cancelado"
-        : `${lot.bidCount} ${lot.bidCount === 1 ? "lance" : "lances"} · não é possível cancelar lote com lances`;
+        ? "Sem lances · pode ser editado ou cancelado"
+        : `${lot.bidCount} ${lot.bidCount === 1 ? "lance" : "lances"} · não é possível editar nem cancelar`;
   }
 }
 

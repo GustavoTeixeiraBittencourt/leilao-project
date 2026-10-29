@@ -16,15 +16,16 @@
 .dashboard__table td { padding: var(--space-3) var(--space-4); vertical-align: middle; }
 .dashboard__table tbody tr + tr td { border-top: 1px solid var(--color-border-default); }
 .dashboard__price, .my-lot__price { text-align: right !important; white-space: nowrap; }
+.dashboard__actions, .my-lot__actions-cell { text-align: right !important; }
+.dashboard__title { text-wrap: balance; }
 
 .my-lot__work { display: flex; align-items: center; gap: var(--space-3); min-width: 240px; }
 .my-lot__image { flex: none; width: 64px; height: 48px; }
 .my-lot__link:hover { text-decoration: underline; }
-.my-lot__result { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
-.my-lot__actions { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+.my-lot__period { white-space: nowrap; }
+.my-lot__period span { display: block; }
+.my-lot__actions { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); flex-wrap: wrap; }
 .my-lot__actions .my-lot__link { color: var(--color-brand-primary); }
-.cancel-confirm { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
-.cancel-confirm__error { flex-basis: 100%; color: var(--color-danger-fg); }
 
 /* Mobile: cada lote vira um cartão; o rótulo de cada célula vem do data-label. */
 @media (max-width: 767px) {
@@ -51,5 +52,7 @@
     color: var(--color-text-secondary);
   }
   .my-lot__work { min-width: 0; padding-top: var(--space-4) !important; }
-  .my-lot__price { text-align: left !important; }
+  .my-lot__price, .my-lot__actions-cell { text-align: left !important; }
+  .my-lot__actions { justify-content: flex-start; }
+  .my-lot__actions-cell:empty { display: none; }
 }

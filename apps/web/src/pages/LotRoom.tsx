@@ -5,6 +5,7 @@ import { bidsQueryKey, fetchBids, type Bid } from "../api/bids";
 import { ApiError } from "../api/client";
 import { fetchLot, lotQueryKey, type Lot } from "../api/lots";
 import { walletQueryKey } from "../api/wallet";
+import { ArtworkSheet } from "../components/ArtworkSheet";
 import { BidPanel } from "../components/BidPanel";
 import { LotImage } from "../components/LotImage";
 import { useAuth } from "../hooks/useAuth";
@@ -13,7 +14,6 @@ import { useNow } from "../hooks/useNow";
 import { formatCountdown, remainingMs, serverNowMs } from "../lib/clock";
 import { describeError } from "../lib/errors";
 import { bidsLabel, firstLine, formatDayAt, formatMoney, lotCode } from "../lib/format";
-import { artworkFacts } from "../lib/lots";
 import { bidsAscending, needsPhaseRefresh, remainingAnnouncement, standingOf } from "../lib/room";
 import { Button, ButtonLink } from "../ui/Button";
 import { EmptyState, ErrorState, Skeleton } from "../ui/States";
@@ -61,27 +61,6 @@ function Countdown({ lot, extended }: { lot: Lot; extended: boolean }) {
         </span>
       )}
     </div>
-  );
-}
-
-// Ficha da obra: o snapshot do museu guardado no lote (ver `artworkFacts`). Sem nenhum dado, a seção some.
-function ArtworkSheet({ lot }: { lot: Lot }) {
-  const facts = artworkFacts(lot);
-  if (facts.length === 0) return null;
-  return (
-    <section className="sheet" aria-labelledby="sheet-title">
-      <h2 id="sheet-title" className="t-h2">
-        Ficha da obra
-      </h2>
-      <dl className="attributes">
-        {facts.map((fact) => (
-          <div key={fact.label} className="attributes__row">
-            <dt className="t-label-m text-secondary">{fact.label}</dt>
-            <dd className="t-body-m">{fact.value}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
   );
 }
 
@@ -318,7 +297,7 @@ export function LotRoom() {
 
       {/* Barra fixa do mobile (Figma: Bid Bar): lance atual + atalho para a folha. */}
       {sheetable && (
-        <div className={["bid-bar", user ? "bid-bar--above-tabs" : ""].filter(Boolean).join(" ")}>
+        <div className="bid-bar">
           <div className="bid-bar__info">
             <span className="t-overline text-secondary">{lot.bidCount > 0 ? "Lance atual" : "Lance inicial"}</span>
             <span className="t-number-m num">{formatMoney(lot.currentBidCents ?? lot.startingBidCents)}</span>

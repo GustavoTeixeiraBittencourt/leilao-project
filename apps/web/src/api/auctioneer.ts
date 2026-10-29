@@ -27,6 +27,18 @@ export function cancelLot(lotId: string) {
   return apiFetch<{ lot: Lot }>(`/lots/${lotId}/cancel`, { method: "POST" });
 }
 
+export type UpdateLotInput = Partial<{
+  startingBidCents: number;
+  minIncrementCents: number;
+  startsAt: string;
+  endsAt: string;
+}>;
+
+// PATCH /lots/:id: só lote do dono, aberto e sem lances (o servidor decide).
+export function updateLot(lotId: string, input: UpdateLotInput) {
+  return apiFetch<{ lot: Lot }>(`/lots/${lotId}`, { method: "PATCH", body: JSON.stringify(input) });
+}
+
 // Item da busca no acervo (GET /external/artworks). `attributes` é o snapshot que o
 // lote guarda: depois de publicado, o lote não depende mais da API do museu.
 export type Artwork = {

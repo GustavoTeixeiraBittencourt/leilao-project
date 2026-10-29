@@ -55,12 +55,12 @@ describe("resultText", () => {
   });
 
   it("explains why a lot with bids cannot be cancelled", () => {
-    expect(resultText(lot({ bidCount: 23 }))).toBe("23 lances · não é possível cancelar lote com lances");
+    expect(resultText(lot({ bidCount: 23 }))).toBe("23 lances · não é possível editar nem cancelar");
     expect(resultText(lot({ bidCount: 1 }))).toContain("1 lance ·");
   });
 
   it("says a lot with no bids can be cancelled", () => {
-    expect(resultText(lot({ phase: "scheduled" }))).toBe("Sem lances · pode ser cancelado");
+    expect(resultText(lot({ phase: "scheduled" }))).toBe("Sem lances · pode ser editado ou cancelado");
   });
 
   it("says a cancelled lot is hidden from the showcase", () => {

@@ -138,6 +138,7 @@ describe("error messages", () => {
       "AUCTIONEER_CANNOT_BID",
       "LOT_HAS_BIDS",
       "LOT_NOT_CANCELLABLE",
+      "LOT_NOT_EDITABLE",
       "INVALID_CREDENTIALS",
       "EMAIL_ALREADY_IN_USE",
       "UNAUTHORIZED",

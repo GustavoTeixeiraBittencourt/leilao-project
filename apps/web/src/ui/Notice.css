@@ -15,6 +15,10 @@
 .notice--warning .notice__title,
 .notice--warning .notice__icon { color: var(--color-warning-fg); }
 
+.notice--info { background: var(--color-bg-subtle); }
+.notice--info .notice__title,
+.notice--info .notice__icon { color: var(--color-text-secondary); }
+
 .notice--success { background: var(--color-success-bg); }
 .notice--success .notice__title,
 .notice--success .notice__icon { color: var(--color-success-fg); }
