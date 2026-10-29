@@ -104,8 +104,8 @@ erro de sintaxe; percebi pelo `tsc` e corrigi antes de seguir. Sem efeito fora d
 
 **O que a IA gerou**: `PATCH /lots/:id` e a tela de editar lote (`EditLot`, `ArtworkSheet` compartilhado com a sala,
 `CancelLotAction`); ajustes do painel e do "Novo lote"; o menu lateral do mobile (`<dialog>` em `Layout.tsx`,
-`lib/nav.ts`) no lugar da barra de abas; rolagem ao topo e título por rota; o tom `info` do `Notice`; a documentação
-Swagger (`/docs`, `src/docs/openapi.ts`, corpos gerados dos schemas Zod); a atualização do README e do
+`lib/nav.ts`) no lugar da barra de abas; rolagem ao topo e título por rota; o tom `info` do `Notice`; a **documentação
+da API feita inteiramente pela IA** (Swagger em `/docs`, `src/docs/openapi.ts`, corpos gerados dos schemas Zod, e a seção "Documentação da API" do README); a atualização do README e do
 `DECISIONS.md`; e a correção do botão "Confirmar cancelamento" com 2 testes novos. Total ao fim: 162 testes na API e
 175 no front. O usuário definiu o escopo de cada pedido e decidiu **não** fazer dark mode, PWA e i18n.
 
@@ -116,7 +116,8 @@ Swagger (`/docs`, `src/docs/openapi.ts`, corpos gerados dos schemas Zod); a atua
 - **O bug do cancelamento**: o front mandava `Content-Type: application/json` num POST sem corpo; o Fastify recusa
   JSON vazio e o handler de erros devolvia 500. Os testes não pegavam porque não enviavam esse cabeçalho. A API agora
   aceita corpo vazio e o front só declara JSON quando há corpo. Lição: teste com os cabeçalhos reais do navegador.
-- `docs/openapi.ts` é escrito **à mão**: uma rota nova precisa ser acrescentada ali (o `docs.test.ts` cobre as
+- **Documentação da API**: o usuário deve ler `docs/openapi.ts` e conferir se cada rota, papel exigido e código de erro descrito
+  bate com o código. `docs/openapi.ts` é escrito **à mão**: uma rota nova precisa ser acrescentada ali (o `docs.test.ts` cobre as
   principais). Os corpos vêm de `zod-to-json-schema`; as respostas são resumidas e podem ficar defasadas.
 - O menu lateral depende do `<dialog>` nativo (foco preso e Esc vêm do navegador). Não há teste de componente.
 
