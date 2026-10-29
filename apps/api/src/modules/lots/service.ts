@@ -4,7 +4,7 @@ import { getDbNow, lockLot, searchLotIds } from "../../db/locks.js";
 import { publishLotEvent } from "../../lib/events.js";
 import { AppError } from "../../lib/errors.js";
 import { closeIfDue } from "../settlement/service.js";
-import type { CreateLotInput, ListLotsQuery } from "./schemas.js";
+import type { CreateLotInput, ListLotsQuery, UpdateLotInput } from "./schemas.js";
 
 // Líder e vencedor aparecem só pelo alias pseudônimo.
 const lotInclude = {
@@ -81,6 +81,53 @@ export async function cancelLot(userId: string, lotId: string) {
 
   // Só depois do commit; quem está na sala do lote precisa ver que ele saiu.
   publishLotEvent({ type: "lot_cancelled", lotId, serverNow: new Date().toISOString() });
+  return result;
+}
+
+// Edição dos parâmetros do leilão (lance inicial, incremento, horários). Mesma regra e mesmo
+// lock do cancelamento: só o dono, só lote aberto que não terminou e SEM lances. Sem lances
+// não existe cadeia de hash (o genesis é criado no 1º lance, com estes parâmetros), então
+// mudar aqui não afeta a auditoria. Lance simultâneo: ou entra antes (a edição recebe
+// LOT_NOT_EDITABLE) ou depois (já vê os parâmetros novos).
+export async function updateLot(userId: string, lotId: string, input: UpdateLotInput) {
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const lot = await lockLot(tx, lotId);
+      if (!lot) throw new AppError("NOT_FOUND", "Lot not found");
+      if (lot.auctioneer_id !== userId) {
+        throw new AppError("FORBIDDEN", "Only the auctioneer who created this lot can edit it");
+      }
+
+      const now = await getDbNow(tx);
+      if (lot.status !== "open" || lot.ends_at <= now) {
+        throw new AppError("LOT_NOT_EDITABLE", "Only lots that have not ended can be edited");
+      }
+      if (lot.bid_count > 0) {
+        throw new AppError("LOT_NOT_EDITABLE", "A lot that already has bids can no longer be edited");
+      }
+
+      const startsAt = input.startsAt ?? lot.starts_at;
+      const endsAt = input.endsAt ?? lot.ends_at;
+      // Lote já aberto não "volta" a agendado: o início só muda enquanto ainda não começou.
+      if (input.startsAt && lot.starts_at <= now && input.startsAt.getTime() !== lot.starts_at.getTime()) {
+        throw new AppError("VALIDATION_ERROR", "startsAt cannot change once the lot has started");
+      }
+      if (endsAt <= startsAt) throw new AppError("VALIDATION_ERROR", "endsAt must be after startsAt");
+      if (endsAt <= now) throw new AppError("VALIDATION_ERROR", "endsAt must be in the future");
+
+      return tx.lot.update({
+        where: { id: lotId },
+        data: {
+          ...(input.startingBidCents !== undefined && { startingBidCents: BigInt(input.startingBidCents) }),
+          ...(input.minIncrementCents !== undefined && { minIncrementCents: BigInt(input.minIncrementCents) }),
+          startsAt,
+          endsAt,
+        },
+        include: lotInclude,
+      });
+    },
+    { timeout: 10_000, maxWait: 5_000 },
+  );
   return result;
 }
 

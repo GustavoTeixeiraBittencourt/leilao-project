@@ -24,6 +24,20 @@ export const createLotSchema = z
   });
 export type CreateLotInput = z.infer<typeof createLotSchema>;
 
+// Edição: só os parâmetros do leilão (título, imagem e atributos são o snapshot da obra e
+// não mudam). Todos opcionais, mas pelo menos um.
+export const updateLotSchema = z
+  .object({
+    startingBidCents: cents.optional(),
+    minIncrementCents: cents.optional(),
+    startsAt: z.coerce.date().optional(),
+    endsAt: z.coerce.date().optional(),
+  })
+  .refine((body) => Object.values(body).some((value) => value !== undefined), {
+    message: "Send at least one field to update",
+  });
+export type UpdateLotInput = z.infer<typeof updateLotSchema>;
+
 export const lotParamsSchema = z.object({ id: z.string().uuid() });
 
 // Fase é derivada do horário, não existe no banco (ver lotPhase em dto.ts).

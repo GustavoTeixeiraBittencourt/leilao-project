@@ -29,7 +29,7 @@ export async function buildApp(options: BuildAppOptions = {}) {
         : true,
   });
 
-  await app.register(cors, { origin: env.CORS_ORIGIN });
+  await app.register(cors, { origin: env.CORS_ORIGIN, methods: ["GET", "HEAD", "POST", "PATCH", "OPTIONS"] });
   await registerErrorHandler(app);
   await app.register(authPlugin);
 

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { lotDto } from "./dto.js";
-import { createLotSchema, listLotsQuerySchema, lotParamsSchema } from "./schemas.js";
-import { cancelLot, createLot, getLot, listLots } from "./service.js";
+import { createLotSchema, listLotsQuerySchema, lotParamsSchema, updateLotSchema } from "./schemas.js";
+import { cancelLot, createLot, getLot, listLots, updateLot } from "./service.js";
 
 export async function lotRoutes(app: FastifyInstance) {
   app.post(
@@ -11,6 +11,17 @@ export async function lotRoutes(app: FastifyInstance) {
       const input = createLotSchema.parse(request.body);
       const lot = await createLot(request.user.sub, input);
       return reply.status(201).send({ lot: lotDto(lot, new Date()) });
+    },
+  );
+
+  app.patch(
+    "/lots/:id",
+    { preHandler: [app.authenticate, app.requireRole("auctioneer")] },
+    async (request) => {
+      const { id } = lotParamsSchema.parse(request.params);
+      const input = updateLotSchema.parse(request.body);
+      const lot = await updateLot(request.user.sub, id, input);
+      return { lot: lotDto(lot, new Date()) };
     },
   );
 
