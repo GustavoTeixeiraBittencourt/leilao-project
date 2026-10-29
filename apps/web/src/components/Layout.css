@@ -73,7 +73,6 @@
   background: none;
   cursor: pointer;
 }
-.user-menu__burger { display: none; font: 400 22px/28px var(--font-display); }
 .user-menu__panel {
   position: absolute;
   right: 0;
@@ -118,8 +117,8 @@
   padding: var(--space-12) var(--layout-margin);
 }
 
-/* ---- Barra de abas (mobile) ---- */
-.tab-bar { display: none; }
+/* ---- Menu lateral (mobile) ---- */
+.mobile-menu-trigger { display: none; }
 
 @media (max-width: 767px) {
   .site-header__inner { padding: var(--space-3) var(--space-4); }
@@ -128,35 +127,79 @@
   .site-header__user { gap: var(--space-3); }
   .balance .t-label-m { font-size: 12px; line-height: 16px; }
   .role-badge { display: none; }
-  /* No mobile o gatilho do menu é o ☰ do Figma, não o avatar. */
-  .user-menu .avatar { display: none; }
-  .user-menu__burger { display: inline; }
+  /* No mobile o menu da conta é o menu lateral; o dropdown do desktop some. */
+  .user-menu { display: none; }
 
-  .tab-bar {
-    position: fixed;
-    inset: auto 0 0 0;
-    z-index: 40;
-    display: flex;
-    justify-content: space-between;
-    padding: var(--space-2) var(--space-4) var(--space-3);
-    background: var(--color-bg-surface);
-    border-top: 1px solid var(--color-border-default);
-  }
-  .tab-bar__tab {
-    display: flex;
-    flex-direction: column;
+  .mobile-menu-trigger,
+  .mobile-menu__close {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-1);
-    min-height: 44px;
+    flex: none;
     min-width: 44px;
-    color: var(--color-text-secondary);
+    min-height: 44px;
+    margin-right: calc(var(--space-2) * -1);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text-primary);
+    cursor: pointer;
   }
-  .tab-bar__indicator { width: 24px; height: 3px; }
-  .tab-bar__tab.active { color: var(--color-brand-primary); }
-  .tab-bar__tab.active .tab-bar__indicator { background: var(--color-brand-primary); }
 
-  /* A barra de abas só existe para quem está logado. Nesse caso o próprio rodapé escuro ganha
-     o espaço da barra (que fica por cima dele); sem barra, nada sobra abaixo do rodapé. */
-  .app--with-tabs .site-footer { padding-bottom: var(--tabbar-height); }
+  /* Acima da folha de lance (60) e do fundo dela (55). */
+  .mobile-menu[open] {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 70;
+    width: min(320px, 86vw);
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--color-bg-page);
+    color: var(--color-text-primary);
+    box-shadow: var(--elevation-2);
+    animation: mobile-menu-in 200ms ease-out;
+  }
+  .mobile-menu::backdrop { background: rgba(36, 37, 31, 0.5); }
+  @keyframes mobile-menu-in { from { transform: translateX(100%); } to { transform: none; } }
+
+  .mobile-menu__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border-default);
+  }
+  .mobile-menu__who { min-width: 0; overflow-wrap: anywhere; }
+
+  .mobile-menu__nav { display: flex; flex-direction: column; padding: var(--space-2) 0; }
+  .mobile-menu__account {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+    padding: var(--space-2) 0 var(--space-4);
+    border-top: 1px solid var(--color-border-default);
+  }
+  /* Linha de 48px. */
+  .mobile-menu__link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 48px;
+    padding: 0 var(--space-4);
+    border: 0;
+    background: none;
+    color: var(--color-text-secondary);
+    text-align: left;
+    cursor: pointer;
+  }
+  .mobile-menu__link:hover { color: var(--color-text-primary); }
+  /* Ativo: cor da marca + peso (o estado não depende só da cor). */
+  .mobile-menu__link.active { color: var(--color-brand-primary); font-weight: 600; }
 }

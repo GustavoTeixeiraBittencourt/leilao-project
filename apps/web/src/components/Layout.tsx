@@ -1,55 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { fetchWallet, walletQueryKey } from "../api/wallet";
 import type { Role } from "../api/auth";
 import { useAuth } from "../hooks/useAuth";
 import { formatMoney, initial } from "../lib/format";
+import { navItems } from "../lib/nav";
 import "./Layout.css";
-
-type NavItem = { to: string; label: string; end?: boolean };
-
-// A navegação muda com o papel (Figma: licitante vê arremates e carteira; o
-// leiloeiro vê o painel). "Auditoria" é pública e aparece para todos.
-function desktopNav(role: Role | null): NavItem[] {
-  if (role === "bidder") {
-    return [
-      { to: "/", label: "Vitrine", end: true },
-      { to: "/wins", label: "Meus arremates" },
-      { to: "/wallet", label: "Carteira" },
-      { to: "/audit", label: "Auditoria" },
-    ];
-  }
-  if (role === "auctioneer") {
-    return [
-      { to: "/", label: "Vitrine", end: true },
-      { to: "/auctioneer", label: "Meus lotes", end: true },
-      { to: "/auctioneer/new", label: "Novo lote" },
-      { to: "/audit", label: "Auditoria" },
-    ];
-  }
-  return [
-    { to: "/", label: "Vitrine", end: true },
-    { to: "/audit", label: "Auditoria" },
-  ];
-}
-
-// Barra de abas do mobile (só para quem está logado).
-function mobileTabs(role: Role): NavItem[] {
-  return role === "bidder"
-    ? [
-        { to: "/", label: "Vitrine", end: true },
-        { to: "/wins", label: "Arremates" },
-        { to: "/wallet", label: "Carteira" },
-        { to: "/profile", label: "Perfil" },
-      ]
-    : [
-        { to: "/", label: "Vitrine", end: true },
-        { to: "/auctioneer", label: "Meus lotes", end: true },
-        { to: "/auctioneer/new", label: "Novo lote" },
-        { to: "/profile", label: "Perfil" },
-      ];
-}
 
 const ROLE_LABEL: Record<Role, string> = { bidder: "Licitante", auctioneer: "Leiloeiro" };
 
@@ -88,9 +45,6 @@ function UserMenu() {
         <span className="avatar t-label-m" aria-hidden="true">
           {initial(user.displayName)}
         </span>
-        <span className="user-menu__burger" aria-hidden="true">
-          ☰
-        </span>
       </button>
       {open && (
         <div className="user-menu__panel" role="menu">
@@ -118,6 +72,116 @@ function UserMenu() {
   );
 }
 
+const DESKTOP_QUERY = "(min-width: 768px)";
+
+// Menu lateral do mobile (entra pela direita). Usa <dialog>: o navegador cuida do foco preso,
+// do Esc e do fundo (::backdrop); aqui falta só fechar ao navegar e travar a rolagem da página.
+function MobileMenu() {
+  const { user, logout } = useAuth();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
+  const menuId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    // Se a janela crescer até o desktop com o menu aberto, fecha (o gatilho some).
+    const query = window.matchMedia(DESKTOP_QUERY);
+    const onChange = () => query.matches && dialogRef.current?.close();
+    query.addEventListener("change", onChange);
+    return () => {
+      document.body.style.overflow = previous;
+      query.removeEventListener("change", onChange);
+    };
+  }, [open]);
+
+  function close() {
+    dialogRef.current?.close();
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="mobile-menu-trigger"
+        aria-label="Abrir menu"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => {
+          dialogRef.current?.showModal();
+          setOpen(true);
+        }}
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      <dialog
+        ref={dialogRef}
+        id={menuId}
+        className="mobile-menu"
+        aria-label="Menu"
+        onClose={() => setOpen(false)}
+        // Toque no fundo: o alvo é o próprio <dialog>, não o conteúdo.
+        onClick={(event) => event.target === event.currentTarget && close()}
+      >
+        <div className="mobile-menu__head">
+          {user ? (
+            <div className="mobile-menu__who">
+              <p className="t-label-m">{user.displayName}</p>
+              <p className="t-caption text-secondary">
+                {ROLE_LABEL[user.role]} · {user.publicAlias}
+              </p>
+            </div>
+          ) : (
+            <p className="t-label-m">ACERVO</p>
+          )}
+          <button type="button" className="mobile-menu__close" aria-label="Fechar menu" onClick={close}>
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <nav className="mobile-menu__nav" aria-label="Navegação móvel">
+          {navItems(user?.role ?? null).map((item) => (
+            <NavLink key={item.to} to={item.to} end={item.end} className="mobile-menu__link t-body-m" onClick={close}>
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="mobile-menu__account">
+          {user ? (
+            <>
+              <NavLink to="/profile" className="mobile-menu__link t-body-m" onClick={close}>
+                Meu perfil
+              </NavLink>
+              <button
+                type="button"
+                className="mobile-menu__link t-body-m"
+                onClick={() => {
+                  close();
+                  logout();
+                }}
+              >
+                Sair
+              </button>
+            </>
+          ) : (
+            <NavLink to="/login" className="mobile-menu__link t-body-m" onClick={close}>
+              Entrar
+            </NavLink>
+          )}
+        </div>
+      </dialog>
+    </>
+  );
+}
+
 function Header() {
   const { user } = useAuth();
   const role = user?.role ?? null;
@@ -136,7 +200,7 @@ function Header() {
         </Link>
 
         <nav className="site-header__nav t-label-m" aria-label="Principal">
-          {desktopNav(role).map((item) => (
+          {navItems(role).map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className="site-header__link">
               {item.label}
             </NavLink>
@@ -158,6 +222,7 @@ function Header() {
               Entrar
             </Link>
           )}
+          <MobileMenu />
         </div>
       </div>
     </header>
@@ -179,25 +244,9 @@ function Footer() {
   );
 }
 
-function TabBar() {
-  const { user } = useAuth();
-  if (!user) return null;
-  return (
-    <nav className="tab-bar" aria-label="Navegação móvel">
-      {mobileTabs(user.role).map((item) => (
-        <NavLink key={item.to} to={item.to} end={item.end} className="tab-bar__tab t-label-s">
-          <span className="tab-bar__indicator" aria-hidden="true" />
-          {item.label}
-        </NavLink>
-      ))}
-    </nav>
-  );
-}
-
 export function Layout() {
-  const { user } = useAuth();
   return (
-    <div className={user ? "app app--with-tabs" : "app"}>
+    <div className="app">
       <a href="#conteudo" className="skip-link t-label-m">
         Ir para o conteúdo
       </a>
@@ -206,7 +255,6 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
-      <TabBar />
     </div>
   );
 }

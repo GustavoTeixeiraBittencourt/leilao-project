@@ -42,6 +42,6 @@
 
 /* Imprimir / salvar em PDF: só o documento, sem cabeçalho, rodapé nem botões. */
 @media print {
-  .site-header, .site-footer, .tab-bar, .skip-link, .receipt__share { display: none !important; }
+  .site-header, .site-footer, .skip-link, .receipt__share { display: none !important; }
   .receipt { border: 0; box-shadow: none; max-width: none; }
 }
