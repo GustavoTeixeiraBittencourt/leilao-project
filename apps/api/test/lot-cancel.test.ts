@@ -62,6 +62,35 @@ describe("POST /lots/:id/cancel", () => {
       expect((await prisma.lot.findUniqueOrThrow({ where: { id: lot.id } })).status).toBe("cancelled");
     });
 
+    // O navegador envia Content-Type: application/json também neste POST sem corpo; o Fastify
+    // recusava ("JSON vazio") e o botão "Confirmar cancelamento" mostrava erro interno.
+    it("accepts the browser's request: JSON content-type with an empty body", async () => {
+      const { lot, token } = await auctioneerWithLot();
+
+      const response = await app.inject({
+        method: "POST",
+        url: `/lots/${lot.id}/cancel`,
+        headers: { ...authHeader(token), "content-type": "application/json" },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().lot.phase).toBe("cancelled");
+    });
+
+    it("answers malformed JSON with 400, not 500", async () => {
+      const { token } = await auctioneerWithLot();
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/lots",
+        headers: { ...authHeader(token), "content-type": "application/json" },
+        payload: "{not json",
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json().code).toBe("VALIDATION_ERROR");
+    });
+
     it("cancels a live lot that has no bids", async () => {
       const { lot, token } = await auctioneerWithLot();
 

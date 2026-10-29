@@ -96,3 +96,34 @@ real (criou uma conta própria, não alterou o seed). **Nenhuma tela foi aberta 
 
 **Erro meu desta rodada**: um `heredoc` converteu `\n` em quebra de linha real dentro de strings de um teste, gerando
 erro de sintaxe; percebi pelo `tsc` e corrigi antes de seguir. Sem efeito fora do arquivo de teste.
+
+
+---
+
+## Revisão final: edição de lote, menu mobile, Swagger e correção do cancelamento (2026-10-29)
+
+**O que a IA gerou**: `PATCH /lots/:id` e a tela de editar lote (`EditLot`, `ArtworkSheet` compartilhado com a sala,
+`CancelLotAction`); ajustes do painel e do "Novo lote"; o menu lateral do mobile (`<dialog>` em `Layout.tsx`,
+`lib/nav.ts`) no lugar da barra de abas; rolagem ao topo e título por rota; o tom `info` do `Notice`; a documentação
+Swagger (`/docs`, `src/docs/openapi.ts`, corpos gerados dos schemas Zod); a atualização do README e do
+`DECISIONS.md`; e a correção do botão "Confirmar cancelamento" com 2 testes novos. Total ao fim: 162 testes na API e
+175 no front. O usuário definiu o escopo de cada pedido e decidiu **não** fazer dark mode, PWA e i18n.
+
+**O que precisa de revisão humana** (explicar em entrevista):
+- `modules/lots/service.ts` (`updateLot`): mesma regra e mesmo lock (`FOR UPDATE`) do cancelamento; só o dono, só sem
+  lances, início fixo depois que o lote abre. Saber dizer por que título, imagem e atributos não são editáveis
+  (são o snapshot que mantém o lote vivo sem a API do museu).
+- **O bug do cancelamento**: o front mandava `Content-Type: application/json` num POST sem corpo; o Fastify recusa
+  JSON vazio e o handler de erros devolvia 500. Os testes não pegavam porque não enviavam esse cabeçalho. A API agora
+  aceita corpo vazio e o front só declara JSON quando há corpo. Lição: teste com os cabeçalhos reais do navegador.
+- `docs/openapi.ts` é escrito **à mão**: uma rota nova precisa ser acrescentada ali (o `docs.test.ts` cobre as
+  principais). Os corpos vêm de `zod-to-json-schema`; as respostas são resumidas e podem ficar defasadas.
+- O menu lateral depende do `<dialog>` nativo (foco preso e Esc vêm do navegador). Não há teste de componente.
+
+**Limites do que foi verificado**: lint, testes da API e do front, build de produção, e chamadas à API local e à de
+produção por `curl`/injeção. **Nenhuma tela foi aberta em navegador pela IA**: o menu lateral, o layout da edição, o
+painel e a rolagem precisam de conferência visual. O cancelamento foi reproduzido e corrigido pela API, não pelo clique.
+
+**Erro meu desta rodada**: afirmei que o cancelamento funcionava depois de testá-lo só com `curl` sem o cabeçalho que o
+navegador envia; o usuário viu o erro no navegador. Também quebrei o `EditLot.tsx` ao reformatá-lo por script e reescrevi
+o trecho final; o `tsc` e os testes confirmaram o arquivo.

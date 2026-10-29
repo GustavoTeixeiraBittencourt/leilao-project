@@ -492,3 +492,52 @@ disputando, foi superado ou perdeu não via nada além do extrato da Carteira.
 - Leitura pura: não toca no ledger nem no saldo.
 - `GET /me/wins` e o stat "Arremates" do Perfil ficam como estavam.
 - **Ordem de deploy**: o front agora depende do endpoint novo; publicar a API (Render) antes de confiar em `/wins`.
+
+
+## 29/10 — Edição de lote, menu lateral no mobile, Swagger e o que ficou de fora
+
+**Edição de lote** (`PATCH /lots/:id`, tela `/auctioneer/lots/:id/edit`).
+- Só o **dono** edita, e só enquanto o lote **não tem lances** e não encerrou (`LOT_NOT_EDITABLE`, 409). A mesma
+  regra do cancelamento: depois do primeiro lance, mudar lance inicial, incremento ou horário alteraria as
+  condições em que as pessoas já apostaram.
+- Editáveis: lance inicial, incremento mínimo, início e encerramento. **Título, imagem e atributos não mudam**: são
+  o snapshot da obra no momento da publicação (é o que faz o lote sobreviver à API do museu fora do ar). O início de
+  um lote já aberto também não muda (ele não "volta" a agendado). A transação trava o lote (`FOR UPDATE`) como a do
+  lance, então uma edição e um lance simultâneos não se atropelam: quem chega depois vê o estado real.
+- A tela mostra a obra exatamente como a sala do lote (componente `ArtworkSheet` compartilhado) e a ação de
+  cancelar fica fora do formulário de salvar, com "Manter lote" na confirmação (havia dois "Voltar" com sentidos
+  opostos).
+
+**Painel e telas do leiloeiro**: a coluna "Lance atual" virou "Valor" (em lote encerrado mostra o preço final, não
+um lance atual); resultado e ações em colunas separadas; datas como "Abre …" / "Encerra …". Depois de publicar, a
+tela oferece "Publicar outro lote". O `Notice` ganhou o tom `info` (cinza): amarelo só para risco ou restrição
+(leiloeiro não dá lance, saldo insuficiente, superado), não para informação neutra.
+
+**Mobile: menu lateral no lugar da barra de abas.** A barra inferior (Vitrine/Arremates/Carteira/Perfil) saiu e o ☰
+abre um painel pela direita com a navegação do papel, Auditoria, Meu perfil e Sair. Usa `<dialog>` nativo
+(`showModal`): foco preso, Esc e fundo escurecido sem biblioteca; fecha ao navegar e trava a rolagem da página. O
+visitante também ganha o ☰ (antes não alcançava a Auditoria pública no celular). A barra de lance da sala do lote
+passou a ficar colada no rodapé. A lista de itens por papel mora em `lib/nav.ts`, com teste.
+
+**Navegação**: a SPA não recarregava a página, então abrir um lote no meio da vitrine abria a sala no meio. Agora a
+rota nova volta ao topo; voltar/avançar do navegador restaura a posição (só o caminho conta, trocar aba ou busca da
+vitrine não rola a página). Cada rota define o título da aba (a sala usa o nome da obra).
+
+**Documentação da API com Swagger** (`/docs`, JSON em `/docs/json`). Escolhi um documento OpenAPI **escrito à mão**
+em vez de anotar cada rota com `schema`: as rotas validam com Zod, e passar JSON Schema ao Fastify ligaria o Ajv
+por cima, com regras e coerções diferentes das do Zod. Os corpos de requisição são gerados dos próprios schemas
+Zod (`zod-to-json-schema`), então não divergem do que a API valida; as respostas são resumidas à mão. Trade-off: uma
+rota nova precisa ser acrescentada ao documento (um teste cobre as rotas principais). Tempo real é SSE e aparece
+descrito na rota, porque o Swagger UI não exibe streams.
+
+**Tempo real: SSE, não WebSocket.** O fluxo é só do servidor para o navegador (o lance vai por `POST`), e o
+`EventSource` reconecta sozinho e atravessa o proxy do Render sem configuração, por HTTPS. WebSocket traria um
+protocolo bidirecional que nada aqui usa.
+
+**Ficou de fora, de propósito** (todos opcionais ou fora do essencial do enunciado, e sem tempo para fazer bem):
+- **Dark mode**: mapeado no Figma, nunca desenhado; os tokens são só do tema claro.
+- **PWA** (manifest, ícones, service worker): o app é um SPA responsivo, sem uso offline; um service worker mal
+  configurado ainda poderia servir o front antigo depois de um deploy.
+- **Internacionalização**: interface só em pt-BR; mensagens de erro da API em inglês, com `code` estável para o
+  front traduzir. Trocar de idioma exigiria extrair todo o texto para catálogos.
+- **Testes de navegador/E2E**: o front tem testes de lógica pura; a conferência visual é manual.

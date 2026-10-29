@@ -55,7 +55,9 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     response = await fetch(`${API_URL}${path}`, {
       ...init,
       headers: {
-        "Content-Type": "application/json",
+        // Só declara JSON quando há corpo: um POST sem corpo (ex.: cancelar lote) com este
+        // cabeçalho era recusado pelo servidor como "JSON vazio".
+        ...(init?.body !== undefined ? { "Content-Type": "application/json" } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...init?.headers,
       },

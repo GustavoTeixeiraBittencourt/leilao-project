@@ -7,6 +7,7 @@ Teste técnico (Verzel — Elite Dev).
 |---|---|
 | **Front (deploy)** | https://leilao-project-seven.vercel.app |
 | **API (deploy)** | https://leilao-api-4ogr.onrender.com (`/health`) |
+| **Documentação da API (Swagger)** | https://leilao-api-4ogr.onrender.com/docs |
 | Decisões técnicas | [`DECISIONS.md`](./DECISIONS.md) |
 | Uso de IA | [`AI_USAGE.md`](./AI_USAGE.md) |
 | Contexto do desafio | [`CLAUDE.md`](./CLAUDE.md) |
@@ -44,7 +45,8 @@ Dois papéis, cada conta tem um só:
 | Meus arremates (lotes em que dei lance e os vencidos, com comprovante e link compartilhável) | `/wins` | licitante |
 | Comprovante público | `/r/:token` | todos |
 | Auditoria pública (histórico completo e veredito íntegro/adulterado) | `/audit`, `/audit/:lotId` | todos, sem login |
-| Painel do leiloeiro: meus lotes, resultado dos encerrados, cancelar lote sem lances | `/auctioneer` | leiloeiro |
+| Painel do leiloeiro: meus lotes, resultado dos encerrados, editar ou cancelar lote sem lances | `/auctioneer` | leiloeiro |
+| Editar lote (lance inicial, incremento, horários; a obra é o snapshot e não muda) | `/auctioneer/lots/:id/edit` | leiloeiro, dono do lote |
 | Novo lote: busca no acervo do museu e publicação | `/auctioneer/new` | leiloeiro |
 | Login / cadastro (escolha de papel) | `/login`, `/signup` | todos |
 | Perfil: editar nome de exibição, trocar senha, resumo da conta por papel | `/profile` | logado |
@@ -90,8 +92,8 @@ pnpm dev:web    # http://localhost:5173
 ### Testes e verificação
 
 ```bash
-pnpm --filter @leilao/api test   # 128 testes de integração (exigem o Postgres no ar)
-pnpm --filter @leilao/web test   # 126 testes de lógica pura (dinheiro, relógio, SSE, auditoria, formulários, perfil)
+pnpm --filter @leilao/api test   # 162 testes de integração (exigem o Postgres no ar)
+pnpm --filter @leilao/web test   # 175 testes de lógica pura (dinheiro, relógio, SSE, auditoria, formulários, perfil, navegação)
 pnpm lint                        # tsc em api e web
 ```
 
@@ -229,6 +231,20 @@ camada extra, **não** a garantia principal (quem é dono do banco pode desativ�
 estável** ("Licitante #a3f9"), nunca nome ou e-mail. O alias tem 4 hex (65.536 valores) e é único; uma
 colisão no cadastro é tratada com nova tentativa.
 
+## Documentação da API (Swagger)
+
+Documentação interativa em **`/docs`** da API (produção: https://leilao-api-4ogr.onrender.com/docs; local:
+http://localhost:3000/docs). O documento OpenAPI cru está em `/docs/json`. Lá estão todas as rotas, os papéis
+exigidos, os códigos de erro estáveis (`{ code, message }`) e como autenticar: faça `POST /auth/login`, copie o
+`token` e use **Authorize** com ele.
+
+- O documento é escrito à mão em [`apps/api/src/docs/openapi.ts`](./apps/api/src/docs/openapi.ts), porque as rotas
+  validam com Zod e não com JSON Schema do Fastify. **Os corpos de requisição são gerados dos mesmos schemas Zod**
+  que a API usa para validar (`zod-to-json-schema`), então não divergem; as respostas são descritas à mão, de forma
+  resumida. Um teste (`apps/api/test/docs.test.ts`) garante que as rotas principais estão documentadas.
+- O tempo real é **SSE** (`GET /lots/{id}/events`, `text/event-stream`). O Swagger UI não exibe streams; para ver os
+  eventos use `curl -N <api>/lots/<id>/events`.
+
 ## Variáveis de ambiente
 
 ### `apps/api/.env`
@@ -319,7 +335,10 @@ Nota fiscal, revenda, app nativo e recuperação de senha (conforme o enunciado)
 
 ## Limitações conhecidas (resumo)
 
-- SSE em **instância única** (sem fan-out entre instâncias).
+- SSE em **instância única** (sem fan-out entre instâncias). O tempo real é SSE (HTTP), não WebSocket: o fluxo é só
+  servidor → navegador, e o `EventSource` reconecta sozinho.
+- Não implementados, por decisão de escopo (ver `DECISIONS.md`): **dark mode**, **PWA** (instalável/offline) e
+  **internacionalização** (a interface é só em português do Brasil; as mensagens de erro da API, em inglês).
 - Hash chain: limite em lote aberto descrito acima.
 - Cancelamento só sem lances, portanto **sem estorno** (não há valor comprometido a devolver).
 - Busca no acervo do museu: provavelmente cai no fallback local em produção (Cloudflare).
