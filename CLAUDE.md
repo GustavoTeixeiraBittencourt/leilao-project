@@ -262,7 +262,7 @@ Docker: `docker compose up --build -d` sobe tudo (ver README).
 
 ## 10. Estado atual (29/10/2026, dia da entrega)
 
-- Código **commitado e enviado** à `main` (último: `316c288` + este). Deploy: API https://leilao-api-4ogr.onrender.com
+- Código **commitado e enviado** à `main` (último: `26e37ec` + este). Deploy: API https://leilao-api-4ogr.onrender.com
   (Swagger em `/docs`), front https://leilao-project-seven.vercel.app. Conferir que o Render e a Vercel
   publicaram o commit mais recente antes de testar.
 - Tudo o que o enunciado pede está implementado: Vitrine, login/cadastro, Sala do lote (SSE), Carteira, Meus
@@ -275,9 +275,9 @@ Docker: `docker compose up --build -d` sobe tudo (ver README).
 - Bug corrigido hoje: o front mandava `Content-Type: application/json` em POST sem corpo (cancelar lote) e a API
   respondia 500. A API aceita corpo vazio e o front só declara JSON com corpo. Testar com os cabeçalhos reais do
   navegador, não só `curl`.
-- **Pendente (só o usuário pode fazer)**: re-seed de produção (precisa da External Database URL e do `AUDIT_SECRET`
-  do Render, nunca em arquivo; comando no README §4 do Deploy), rodado por último para os lotes "ao vivo" não
-  vencerem; e a conferência VISUAL em navegador (nenhuma tela foi aberta pelo Claude).
+- Re-seed de produção já rodado (confirmado em 29/10: lotes ao vivo com `startsAt` do mesmo dia, 1 agendado, 1
+  encerrado já liquidado com vencedor e preço final) e conferência VISUAL em navegador já feita pelo usuário
+  (nenhuma tela foi aberta pelo Claude em nenhuma sessão). Sem pendências conhecidas antes da entrega formal.
 - Figma: fileKey `TcgIkTavwQ8L6p3pWLbtkb`; carregar a skill `figma-design-to-code` antes de
   `get_design_context` (se a skill não estiver listada, ler o recurso MCP
   `skill://figma/figma-design-to-code/SKILL.md`).
