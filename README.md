@@ -5,7 +5,7 @@ Teste técnico (Verzel — Elite Dev).
 
 | | |
 |---|---|
-| **Front (deploy)** | https://leilao-project-seven.vercel.app |
+| **Front (deploy)** | https://acervo-leilao.vercel.app |
 | **API (deploy)** | https://leilao-api-4ogr.onrender.com (`/health`) |
 | **Documentação da API (Swagger)** | https://leilao-api-4ogr.onrender.com/docs |
 | Decisões técnicas | [`DECISIONS.md`](./DECISIONS.md) |

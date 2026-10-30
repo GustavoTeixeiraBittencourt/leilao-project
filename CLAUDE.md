@@ -263,7 +263,7 @@ Docker: `docker compose up --build -d` sobe tudo (ver README).
 ## 10. Estado atual (29/10/2026, dia da entrega)
 
 - Código **commitado e enviado** à `main` (último: `26e37ec` + este). Deploy: API https://leilao-api-4ogr.onrender.com
-  (Swagger em `/docs`), front https://leilao-project-seven.vercel.app. Conferir que o Render e a Vercel
+  (Swagger em `/docs`), front https://acervo-leilao.vercel.app. Conferir que o Render e a Vercel
   publicaram o commit mais recente antes de testar.
 - Tudo o que o enunciado pede está implementado: Vitrine, login/cadastro, Sala do lote (SSE), Carteira, Meus
   arremates, Comprovante, Auditoria pública, Painel do leiloeiro, Novo lote e Editar lote (`PATCH /lots/:id`, só
